@@ -20,8 +20,6 @@ head(pheno)
 
 
 
-
-
 # Check data
 pheno %>% 
   select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
