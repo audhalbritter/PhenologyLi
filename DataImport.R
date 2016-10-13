@@ -1,5 +1,8 @@
 # IMPORT DATA
 
+
+
+
 #### LIBRARIES ####
 library("lme4")
 library("tidyr")
@@ -18,7 +21,7 @@ head(pheno.dat)
 pheno <- CalcSums(pheno.dat)
 head(pheno)
 
-# Hello Li, welcome to Bergen 
+
 
 # Check data
 pheno %>% 
