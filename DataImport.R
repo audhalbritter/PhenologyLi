@@ -1,8 +1,5 @@
 # IMPORT DATA
 
-
-
-
 #### LIBRARIES ####
 library("lme4")
 library("tidyr")
@@ -15,7 +12,7 @@ dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
 dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
 pheno.dat <- rbind(dat1, dat2, dat3)
 head(pheno.dat)
-
+str(pheno.dat)
 
 # Calculate Sums of bud, flower etc.
 pheno <- CalcSums(pheno.dat)
