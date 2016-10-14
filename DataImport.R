@@ -7,6 +7,7 @@ library("dplyr")
 library("lubridate")
 library("ggplot2")
 
+
 dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
 dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
