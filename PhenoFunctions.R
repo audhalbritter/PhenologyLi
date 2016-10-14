@@ -1,4 +1,4 @@
-# PhenoFunctions
+# PhenoFunctions 
 #### READ IN PHENOLOGY DATA 2015 ####
 ReadInBodyPhenology <- function(datasheet, site){
   # import body of data
