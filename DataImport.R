@@ -11,7 +11,8 @@ library("ggplot2")
 dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
 dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
-pheno.dat <- rbind(dat1, dat2, dat3)
+pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),])
+pheno.dat <- pheno.dat %>% filter(turfID != "")
 head(pheno.dat)
 str(pheno.dat)
 
@@ -20,7 +21,8 @@ pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Pol.leu","Pot.leu"))%>%
   mutate(species=replace(species,species=="Cal.pal","Oxy.gla"))%>%
   mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>%
-  mutate(species=replace(species,species=="Sal.bra","Sal.sou"))
+  mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% 
+  # make a column for treatment
 
 
 # Calculate Sums of bud, flower etc.
@@ -60,6 +62,7 @@ pheno.long <- pheno %>%
   gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) # create pheno.var and gather 4 variable into 1 column
   #left_join(turfs.15, by = "turfID") # merge data set with turfs.15
 head(pheno.long)
+
 
 
 
