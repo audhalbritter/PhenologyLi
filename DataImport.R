@@ -23,6 +23,7 @@ pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>%
   mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% 
   # make a column for treatment
+  mutate(treatment = substring(turfID, 4, nchar(turfID)))
 
 
 # Calculate Sums of bud, flower etc.
