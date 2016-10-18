@@ -66,11 +66,12 @@ head(pheno.long)
 pheno.long$destSite <- pheno.dat[match(pheno.long$turfID,pheno.dat$turfID),c("destSite")]
 
 
+# Making Figures
 pheno.long %>% 
-  filter(originSite == "A", species == "All.pra") %>% 
+  filter(pheno.stage == "f", species == "All.cya") %>% 
   group_by(species, pheno.var, treatment) %>% 
   ggplot(aes(x = treatment, y = value)) +
   geom_boxplot() +
-  facet_grid(pheno.stage~pheno.var)
+  facet_wrap(pheno.var~originSite)
 
 
