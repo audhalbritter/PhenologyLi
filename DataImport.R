@@ -21,10 +21,7 @@ pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Pol.leu","Pot.leu"))%>%
   mutate(species=replace(species,species=="Cal.pal","Oxy.gla"))%>%
   mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>%
-  mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% 
-  # make a column for treatment
-  mutate(treatment = substring(turfID, 4, nchar(turfID)))
-
+  mutate(species=replace(species,species=="Sal.bra","Sal.sou"))
 
 # Calculate Sums of bud, flower etc.
 pheno <- CalcSums(pheno.dat)
@@ -60,9 +57,13 @@ pheno.long <- pheno %>%
   select(-minDoy) %>% # remove this variable
   mutate_each(funs(as.numeric), first, peak, end) %>% # make variables numeric (probably not necessary)
   mutate(pheno.stage = substring(pheno.stage, nchar(pheno.stage), nchar(pheno.stage))) %>%  # take last letter from pheno.stage
-  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) # create pheno.var and gather 4 variable into 1 column
-  #left_join(turfs.15, by = "turfID") # merge data set with turfs.15
+  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) %>%  # create pheno.var and gather 4 variable into 1 column
+  mutate(treatment = substring(turfID, 4, nchar(turfID))) %>% 
+  mutate(block = substring(turfID, 2,2)) %>% 
+  mutate(originSite = substring(turfID,1,1))
 head(pheno.long)
+
+pheno.long$destSite <- pheno.dat[match(pheno.long$turfID,pheno.dat$turfID),c("destSite")]
 
 
 
