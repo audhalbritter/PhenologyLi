@@ -15,6 +15,14 @@ pheno.dat <- rbind(dat1, dat2, dat3)
 head(pheno.dat)
 str(pheno.dat)
 
+# Replace wrong names
+pheno.dat <- pheno.dat %>%
+  mutate(species=replace(species,species=="Pol.leu","Pot.leu"))%>%
+  mutate(species=replace(species,species=="Cal.pal","Oxy.gla"))%>%
+  mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>%
+  mutate(species=replace(species,species=="Sal.bra","Sal.sou"))
+
+
 # Calculate Sums of bud, flower etc.
 pheno <- CalcSums(pheno.dat)
 head(pheno)
