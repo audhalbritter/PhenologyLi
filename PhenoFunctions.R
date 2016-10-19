@@ -5,8 +5,7 @@ ReadInBodyPhenology <- function(datasheet, site){
   dat <- read.csv(datasheet, header=FALSE, sep=";", skip=3, stringsAsFactors=FALSE)
   dat <- dat[dat$V2!="",] # get rid of empty lines, where no species
   dat <- dat[,-3] # get rid of chinese names
-  dat$V2<-gsub("*", "", dat$V2,fixed = TRUE) # get rid of * and space
-  dat$V2<-gsub(" ", "", dat$V2,fixed = TRUE)
+  dat$V2<-gsub(" ", "", dat$V2,fixed = TRUE) # get rid of space
   
   # loop to get turfID in all cells
   for (i in 2:nrow(dat)){
@@ -32,6 +31,9 @@ ReadInBodyPhenology <- function(datasheet, site){
   dat.long$destSite <- site
   dat.long$block <- substr(dat.long$turfID, 2,2)
   dat.long$treatment <- substr(dat.long$turfID, 4,nchar(dat.long$turfID))
+  # remove species not from original data set if treamtne 1 and 2
+  if(dat.long$treatment %in% c("1", "2")){dat.long[grep("\\*", dat.long$species),]}
+  #dat.long$species <- gsub("*", "", dat.long$species,fixed = TRUE) # get rid of *
   
   # convert to factor and numeric
   dat.long <- cbind(dat.long[,c(1:2,19:24)],sapply(dat.long[,c(3:18)],as.numeric))
@@ -40,7 +42,12 @@ ReadInBodyPhenology <- function(datasheet, site){
   dat.long
   return(dat.long)
 }
+dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 
+dat1 %>% filter(treatment == "C")
+
+ddd <- data.frame(sp = c("*And.min*", "Cya.inc"), value = c(2,3))
+ddd[grep("\\*", ddd$sp),]
 
 
 # Calculate the sum of buds, flowers and seeds per turf and species
