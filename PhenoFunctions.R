@@ -31,9 +31,11 @@ ReadInBodyPhenology <- function(datasheet, site){
   dat.long$destSite <- site
   dat.long$block <- substr(dat.long$turfID, 2,2)
   dat.long$treatment <- substr(dat.long$turfID, 4,nchar(dat.long$turfID))
-  # remove species not from original data set if treamtne 1 and 2
-  if(dat.long$treatment %in% c("1", "2")){dat.long[grep("\\*", dat.long$species),]}
-  #dat.long$species <- gsub("*", "", dat.long$species,fixed = TRUE) # get rid of *
+  # if treatmen 1 or 2, remove species with a *sp* (not from original data set)
+  dat.long  <-  dat.long[
+    (dat.long$treatment %in% c("1", "2") & grepl("\\*.*\\*", as.character(dat.long$species), perl = TRUE)) | #if treatment 1 or 2 only *sp*
+      !(dat.long$treatment %in% c("1", "2")), ] # if other treatment
+  dat.long$species <- gsub("*", "", dat.long$species,fixed = TRUE) # get rid of *
   
   # convert to factor and numeric
   dat.long <- cbind(dat.long[,c(1:2,19:24)],sapply(dat.long[,c(3:18)],as.numeric))
@@ -42,12 +44,6 @@ ReadInBodyPhenology <- function(datasheet, site){
   dat.long
   return(dat.long)
 }
-dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
-
-dat1 %>% filter(treatment == "C")
-
-ddd <- data.frame(sp = c("*And.min*", "Cya.inc"), value = c(2,3))
-ddd[grep("\\*", ddd$sp),]
 
 
 # Calculate the sum of buds, flowers and seeds per turf and species
