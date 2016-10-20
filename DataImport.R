@@ -67,16 +67,23 @@ pheno.long <- pheno.long %>%
   spread(key = pheno.stage, value = value) %>% 
   # calculate difference in days between bud-flower and flower-seed
   mutate(bf = ifelse(pheno.var == "first", f-b, NA), fs = ifelse(pheno.var == "first", s-f, NA), sr = ifelse(pheno.var == "first", r-s, NA)) %>%
-  gather(key = pheno.stage, value = value, b, f, s, r, bf, fs, sr) %>% 
+  gather(key = pheno.stage, value = value, b, f, s, r, bf, fs, sr) %>%
+  mutate(pheno.unit = ifelse(pheno.var == "duration", "days", ifelse(pheno.var == "first" & pheno.stage %in% c("bf", "fs", "sr"), "days", "doy"))) %>% # create variable pheno.unit, doy: b,f,s,r, days: duration, bf, fs, sr
   filter(!is.na(value)) # remove empty rows
 
 # merge site, block and treatment
 pheno.long[,(ncol(pheno.long)+1):(ncol(pheno.long)+4)] <- pheno.dat[match(pheno.long$turfID,pheno.dat$turfID),c("origSite", "destSite", "block", "treatment")]
 
+# Rename variables and order
+pheno.long %>%
+  mutate(destSite = factor(destSite, levels =c("H", "A", "M"))) %>% 
+  mutate(originSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
+  mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2"), c("OTC", "Control", "Local", "Warm", "Cold"))) %>% 
+  mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local")))
 
 # Making Figures
 pheno.long %>% 
-  #filter(pheno.stage == "f", species == "All.cya") %>% 
+  filter(pheno.stage == "f") %>% 
   group_by(pheno.stage, pheno.var, treatment, destSite) %>% 
   summarise(mean = mean(value)) %>% 
   ggplot(aes(x = treatment, y = mean, color = pheno.var)) +
@@ -93,7 +100,4 @@ pheno %>%
   facet_wrap(~ species, scales = "free")
 
 
-mutate(destSite = factor(pheno.var, levels =c("H", "A", "M"))) %>% 
-  mutate(originSite = factor(pheno.var, levels =c("H", "A", "M"))) %>% 
-  mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2"), c("OTC", "Control", "Local", "Warm", "Cold"))) %>% 
-  mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local")))
+
