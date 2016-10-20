@@ -75,20 +75,22 @@ pheno.long <- pheno.long %>%
 pheno.long[,(ncol(pheno.long)+1):(ncol(pheno.long)+4)] <- pheno.dat[match(pheno.long$turfID,pheno.dat$turfID),c("origSite", "destSite", "block", "treatment")]
 
 # Rename variables and order
-pheno.long %>%
+pheno.long <- pheno.long %>%
   mutate(destSite = factor(destSite, levels =c("H", "A", "M"))) %>% 
-  mutate(originSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
+  mutate(origSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
   mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2"), c("OTC", "Control", "Local", "Warm", "Cold"))) %>% 
   mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local")))
 
 # Making Figures
 pheno.long %>% 
-  filter(pheno.stage == "f") %>% 
-  group_by(pheno.stage, pheno.var, treatment, destSite) %>% 
-  summarise(mean = mean(value)) %>% 
-  ggplot(aes(x = treatment, y = mean, color = pheno.var)) +
-  geom_point() +
-  facet_grid(pheno.stage~destSite)
+  filter(pheno.stage == c("b", "f", "s"), pheno.var != "duration") %>% 
+  #filter(pheno.stage == c("bf", "fs", "sr")) %>% 
+  #filter(pheno.var == "duration") %>% 
+  group_by(pheno.stage, pheno.var, treatment, origSite) %>% 
+  #summarise(mean = mean(value)) %>% 
+  ggplot(aes(x = treatment, y = value, color = pheno.var)) +
+  geom_boxplot() +
+  facet_grid(pheno.stage~origSite)
 
 pheno %>% 
   select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
