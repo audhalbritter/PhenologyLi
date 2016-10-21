@@ -85,25 +85,48 @@ pheno.long <- pheno.long %>%
   mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2"), c("OTC", "Control", "Local", "Warm", "Cold"))) %>% 
   mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local")))
 
-# Making Figures
-pheno.long %>% 
-  #filter(pheno.stage == c("b", "f", "s"), pheno.var != "duration") %>% 
-  #filter(pheno.stage == c("bf", "fs", "sr")) %>% 
-  filter(pheno.var == "duration") %>% 
-  group_by(pheno.stage, pheno.var, treatment, origSite) %>% 
-  #summarise(mean = mean(value)) %>% 
-  ggplot(aes(x = treatment, y = value, color = pheno.var)) +
-  geom_boxplot() +
-  facet_grid(pheno.stage~origSite)
-
-
 
 # Trait data
 trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
 head(trait)
 
+# define flowering time
+# early: <= 4 month until June
+# mid: <= 4 month and between April and August
+# late: <= 4 month from July
+# late: >= 4 month
+trait <- trait %>% mutate(flTime = 
+                   ifelse(floweringTime %in% c("Apr-Jun", "Apr-May", "Jun", "May-Jun"), "early",
+                                 ifelse(floweringTime %in% c("Jul-Aug", "Apr-Jul", "Jul", "Jun-Jul", "May-Jul", "May-Jul-(Aug)", "summer", "Jun-Aud", "Jun-Sep"), "mid", 
+                                        ifelse(floweringTime %in% c("Aug-Nov", "Aug-Oct", "Aug-Sep", "Jul-Sep", "Jul-Oct"), "late", "always")))
+                 )
+
+# check species
 setdiff(pheno.long$species, trait$sp)
 setdiff(trait$sp, pheno.long$species)
+
+pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
+
+
+# Making Figures
+pheno.long %>% 
+  filter(treatment %in% c("OTC", "Control")) %>% 
+  filter(functionalGroup == "forb") %>% 
+  #filter(flTime == "always")
+  #filter(pheno.stage %in% c("b", "f", "s"), pheno.var != "duration") %>% 
+  filter(pheno.stage %in% c("bf", "fs", "sr")) %>% 
+  #filter(pheno.var %in% "duration") %>% 
+  group_by(pheno.stage, pheno.var, treatment, origSite) %>% 
+  #summarise(mean = mean(value)) %>% 
+  ggplot(aes(x = treatment, y = value, color = flTime)) +
+  geom_boxplot() +
+  facet_grid(pheno.stage~origSite)
+
+
+
+# Climate data
+
+
 
 
 
