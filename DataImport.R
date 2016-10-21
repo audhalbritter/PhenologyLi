@@ -32,7 +32,7 @@ pheno %>%
   select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
   gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% 
   filter(value > 0) %>%
-  filter(turfID == "H3-OTC") %>% 
+  filter(turfID == "A7-1") %>% 
   group_by(species, pheno.stage) %>% 
   ggplot(aes(x = doy, y = value, color = pheno.stage)) +
   geom_line() +
