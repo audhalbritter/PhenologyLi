@@ -19,6 +19,13 @@ climate <- distinct_weather %>%
   summarise(n = n(), mean = mean(value))
 
 
+distinct_weather %>% 
+  select(site, dateTime, Tsoil0) %>% 
+  ggplot(aes(x = dateTime, y = Tsoil0)) +
+  geom_line() +
+  facet_wrap(~site)
+
+
 # Subset data for 2016, replace values below 5°C with 0, get cumsum
 CumSum2016 <- climate %>% 
   filter(year(ymd(dateDaily)) >= 2016) %>% # only 2016 data
