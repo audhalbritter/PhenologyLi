@@ -14,7 +14,7 @@ dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
 pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),])
 pheno.dat <- pheno.dat %>% filter(turfID != "")
 head(pheno.dat)
-str(pheno.dat)
+str(pheno.dat) 
 
 # Replace wrong names
 pheno.dat <- pheno.dat %>%
@@ -99,7 +99,9 @@ trait <- trait %>% mutate(flTime =
                    ifelse(floweringTime %in% c("Apr-Jun", "Apr-May", "Jun", "May-Jun"), "early",
                                  ifelse(floweringTime %in% c("Jul-Aug", "Apr-Jul", "Jul", "Jun-Jul", "May-Jul", "May-Jul-(Aug)", "summer", "Jun-Aug", "Jun-Sep"), "mid", 
                                         ifelse(floweringTime %in% c("Aug-Nov", "Aug-Oct", "Aug-Sep", "Jul-Sep", "Jul-Oct"), "late", "always")))
-                 )
+                 ) %>%
+  mutate(flTime = ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow"), "early", flTime))
+
 
 # check species
 setdiff(pheno.long$species, trait$sp)
@@ -110,17 +112,17 @@ pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
 
 # Making Figures
 pheno.long %>% 
-  filter(treatment %in% c("OTC", "Control")) %>% 
-  filter(functionalGroup == "forb") %>% 
-  #filter(flTime == "always")
-  #filter(pheno.stage %in% c("b", "f", "s"), pheno.var != "duration") %>% 
-  filter(pheno.stage %in% c("bf", "fs", "sr")) %>% 
+  #filter(treatment %in% c("OTC", "Control","Warm","Local")) %>% 
+ # filter(functionalGroup == "forb") %>% 
+  #filter(flTime == "early") %>%
+  filter(pheno.stage %in% c("b", "f", "s"), pheno.var != "duration") %>% 
+  #filter(pheno.stage %in% c("bf", "fs", "sr")) %>% 
   #filter(pheno.var %in% "duration") %>% 
   group_by(pheno.stage, pheno.var, treatment, origSite) %>% 
   #summarise(mean = mean(value)) %>% 
-  ggplot(aes(x = treatment, y = value, color = flTime)) +
+  ggplot(aes(x = treatment, y = value, color=functionalGroup ) +
   geom_boxplot() +
-  facet_grid(pheno.stage~origSite)
+  facet_grid( ~pheno.stage )
 
 
 
