@@ -111,7 +111,7 @@ pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
 
 
 # Making Figures for each species
-pheno.long %>% 
+name <- pheno.long %>% 
   filter(treatment %in% c("OTC", "Control")) %>% 
   filter(origSite == "H") %>% 
   #filter(functionalGroup == "forb") %>% 
@@ -128,6 +128,7 @@ pheno.long %>%
   ggplot(aes(x = first, y = species, color = treatment)) + geom_point() +
   geom_segment(aes(x=first, xend=(first+duration), y=species, yend=species),size=1)
 
+name + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("H site first flowering")
 
 
 PhenologicalStages <- pheno.long %>% 
