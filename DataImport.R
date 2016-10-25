@@ -125,8 +125,8 @@ pheno.long %>%
 
 
 # Climate data
-
-
+pheno.long <- pheno.long %>% mutate(climateID = paste(destSite, value, sep = "_"))
+pheno.long <- pheno.long %>% left_join(CumSum2016, by = "climateID") %>% select(-site, -dateDaily, -n, -mean, -doy)
 
 
 
