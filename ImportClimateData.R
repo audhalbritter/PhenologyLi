@@ -25,7 +25,8 @@ CumSum2016 <- climate %>%
   mutate(mean = ifelse(mean < 5, 0, mean)) %>%  # replace temperature below 5°C with 0
   mutate(doy = yday(ymd(dateDaily))) %>% # calculate day of the year
   group_by(variable, site) %>% 
-  mutate(cumTemp = cumsum(mean))
+  mutate(cumTemp = cumsum(mean)) %>% 
+  mutate(climateID = paste(site, doy, sep = "_"))
 
 CumSum2016 %>% 
   filter(site != "L") %>% 
@@ -33,3 +34,9 @@ CumSum2016 %>%
   geom_line() +
   facet_wrap(~variable)
 
+
+climate %>% 
+  filter(site == "H", variable == "Tair") %>% 
+  ggplot(aes(x = ymd(dateDaily), y = mean, color = site)) +
+  geom_line() +
+  facet_wrap(~site)
