@@ -1,0 +1,43 @@
+---
+title: "Phenology data 2016"
+author: "Li Zhang and Aud Halbritter"
+date: "1. November 2016"
+output: ioslides_presentation
+---
+
+## Questions and hypothesis
+
+1. Does phenology in alpine grasslands respond to warming?
+2. Do species with certain traits respond differently? Funcitonal Group, flowering time?
+3. Do species respond differently to OTC and transplant?
+4. How plastic are species in response to warming and cooling?
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE)
+```
+
+
+```{r loadStuff, echo = FALSE}
+load(file = "PhenoLong.RData")
+source("Important Figures.R")
+```
+
+## Community appraoch
+
+```{r, echo=FALSE}
+CommunityFig + theme_grey(base_size = 10) + theme(legend.title=element_blank()) + ggtitle("...")
+```
+
+## Functional Traits
+
+```{r, echo=FALSE}
+CommunityFig + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("...")
+```
+
+## Compare the treatments
+
+```{r, echo=FALSE}
+#CompareTreat + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
+```
+
