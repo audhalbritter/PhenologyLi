@@ -85,9 +85,11 @@ pheno.long <- pheno.long %>%
   mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2"), c("OTC", "Control", "Local", "Warm", "Cold"))) %>% 
   mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local"))) %>% 
   # make new variable combining Local and Control
-  mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold")))
+  mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold"))) %>% 
+  mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold")))
 
-# Trait data
+  
+  # Trait data
 trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
 head(trait)
 
