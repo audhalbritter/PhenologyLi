@@ -29,6 +29,7 @@ source("Important Figures.R")
 CommunityFig + theme_grey(base_size = 10) + theme(legend.title=element_blank()) + ggtitle("...")
 ```
 
+
 ## Functional Traits
 
 ```{r, echo=FALSE}
@@ -40,4 +41,18 @@ CommunityFig + theme_grey(base_size = 20) + theme(legend.title=element_blank()) 
 ```{r, echo=FALSE}
 #CompareTreat + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
 ```
+
+
+## Things to discuss
+
+- flowering time
+- elevation
+
+
+## Next steps
+
+- Calculate phenology in temperaure sum
+- ...
+
+
 
