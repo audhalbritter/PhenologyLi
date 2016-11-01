@@ -88,7 +88,8 @@ pheno.long <- pheno.long %>%
   mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold"))) %>% 
   mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold")))
 
-  
+save(pheno.long, file = "PhenoLong.RData")
+
   # Trait data
 trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
 head(trait)
