@@ -12,28 +12,6 @@ pheno.long %>%
   facet_grid(pheno.stage ~origSite)
 
 
-# How many species are the same/different per turfID
-pheno.long %>% 
-  #filter(pheno.var == "first", pheno.stage == "f", origSite == "H", species == "Gen.cra") %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
-  group_by(origSite, species, pheno.var, pheno.stage, newtreat) %>% 
-  summarize(mean = mean(value)) %>%
-  spread(key = newtreat, value = mean) %>% 
-  gather(key = newTT, value = newTTvalue,  -species, -origSite, -pheno.stage, -pheno.var, -Control) %>% # devide control and treamtents
-  mutate(Diff = newTTvalue - Control) %>% 
-  mutate(newTT = factor(newTT, levels=c("OTC", "Warm", "Cold"))) %>% 
-  filter(!is.na(Diff)) %>% 
-  filter(pheno.var == "peak", pheno.stage == "f") %>% 
-  ggplot(aes(y = Diff, x = species, fill = newTT)) +
-  geom_bar(position="dodge", stat="identity") +
-  coord_flip() +
-  ylab("Treatment - Control") +
-  xlab("") +
-  ggtitle("Peak flowering") +
-  facet_wrap(~ origSite)
-  
-
-  
   
 
 ### TEST DIFFERENCE BETWEEN CONTROL AND LOCAL
