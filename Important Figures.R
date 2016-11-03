@@ -38,7 +38,7 @@ DurationCommunity <- pheno.long %>%
   ylab("Days") +
   facet_grid(pheno.stage ~origSite)
 
-StagesCommunity <-  pheno.long %>% 
+TimeCommunity <-  pheno.long %>% 
   select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
   #filter(newtreat %in% c("Control", "OTC")) %>% 
   group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
@@ -78,7 +78,7 @@ DurationFounctionalGroup <- pheno.long %>%
   ylab("Days") +
   facet_grid(pheno.stage ~origSite)
 
-StagesFounctionalGroup <- pheno.long %>% 
+TimeFounctionalGroup <- pheno.long %>% 
   select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
   #filter(newtreat %in% c("Control", "OTC")) %>% 
   group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
@@ -166,22 +166,22 @@ DurationseedingSpecies <- Treat2 %>%
   facet_wrap(~ origSite)
 
   # duration of the first time of neighboring stages
-StagesBfSpecies <- Treat2 %>% #bf is similar with sr
+TimeBfSpecies <- Treat2 %>% #bf is similar with sr
   filter( pheno.stage == "bf") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
   geom_bar(position="dodge", stat="identity") +
   coord_flip() +
   ylab("Treatment - Control") +
   xlab("") +
-  ggtitle("duration of first bud and first flower") +
+  ggtitle("Time between first bud and first flower") +
   facet_wrap(~ origSite)
 
-StagesFsSpecies <- Treat2 %>% 
+TimeFsSpecies <- Treat2 %>% 
   filter( pheno.stage == "fs") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
   geom_bar(position="dodge", stat="identity") +
   coord_flip() +
   ylab("Treatment - Control") +
   xlab("") +
-  ggtitle("duration of first flower and seeding") +
+  ggtitle("Time between first flower and seeding") +
   facet_wrap(~ origSite)
