@@ -14,7 +14,7 @@ output: ioslides_presentation
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 
@@ -23,23 +23,23 @@ load(file = "PhenoLong.RData")
 source("Important Figures.R")
 ```
 
-## Community appraoch
+## Community approach
 
 ```{r, echo=FALSE}
-CommunityFig + theme_grey(base_size = 10) + theme(legend.title=element_blank()) + ggtitle("...")
+PeakCommunity + theme_grey(base_size = 10) + theme(legend.title=element_blank()) + ggtitle("...")
 ```
 
 
 ## Functional Traits
 
 ```{r, echo=FALSE}
-CommunityFig + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("...")
+PeakFounctionalGroup + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
 ```
 
 ## Compare the treatments
 
 ```{r, echo=FALSE}
-#CompareTreat + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
+firstbudSpecies + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
 ```
 
 
