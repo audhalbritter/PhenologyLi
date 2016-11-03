@@ -173,7 +173,7 @@ StagesBfSpecies <- Treat2 %>% #bf is similar with sr
   coord_flip() +
   ylab("Treatment - Control") +
   xlab("") +
-  ggtitle("duration of first bud and first flower") +
+  ggtitle("Time between first bud and first flower") +
   facet_wrap(~ origSite)
 
 StagesFsSpecies <- Treat2 %>% 
