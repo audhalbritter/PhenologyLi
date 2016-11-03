@@ -1,7 +1,7 @@
 ---
 title: "Phenology data 2016"
 author: "Li Zhang and Aud Halbritter"
-date: "1. November 2016"
+date: "1st. November 2016"
 output: ioslides_presentation
 ---
 
@@ -14,45 +14,56 @@ output: ioslides_presentation
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache = FALSE, message = FALSE, warning = FALSE, fig.height = 5.5, fig.width = 8)
+knitr::read_chunk("Important Figures.R")
+
 ```
 
-
-```{r loadStuff, echo = FALSE}
-load(file = "PhenoLong.RData")
-source("Important Figures.R")
-```
 
 ## Community approach
 
-```{r, echo=FALSE}
-PeakCommunity + theme_grey(base_size = 10) + theme(legend.title=element_blank()) + ggtitle("...")
+```{r peakCommunity, eval = TRUE, echo=FALSE}
+
+#PeakCommunity + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Peak")
+
 ```
 
+```{r,  echo=FALSE}
+# DurationCommunity + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Duration")
+```
 
 ## Functional Traits
 
-```{r, echo=FALSE}
-PeakFounctionalGroup + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
+```{r,  echo=FALSE}
+# PeakFounctionalGroup + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Peak time of different FunctionalGroup")
+```
+
+```{r,  echo=FALSE}
+# TimeFounctionalGroup + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("time between neighboring stages")
 ```
 
 ## Compare the treatments
 
 ```{r, echo=FALSE}
-firstbudSpecies + theme_grey(base_size = 5) + theme(legend.title=element_blank()) + ggtitle("...")
+
+#firstbudSpecies + theme_grey(base_size = 5) + theme(legend.title=element_blank())# + ggtitle("First buds")
+
 ```
 
+```{r, echo=FALSE}
+#TimeFsSpecies + theme_grey(base_size = 5) + theme(legend.title=element_blank())# + ggtitle("...")
+```
 
 ## Things to discuss
 
-- flowering time
-- elevation
+- How to define the flowering time to "early","late" stage ?
+- How to define the alpine species according the elevation span?
 
 
 ## Next steps
 
-- Calculate phenology in temperaure sum
-- ...
-
+- Calculate microclimate effects of different warming methods
+- How species respond to experimental temperature?
+- Gap of the H site climate data.
 
 
