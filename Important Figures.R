@@ -1,5 +1,4 @@
 # Figures Presentation
-message("in important figures.R - 1")
 
 ## ----loadPhenology
 #load libraries
@@ -31,7 +30,7 @@ PeakCommunity <- pheno.long %>% # first/end time of the 4 stages show the same t
   filter(pheno.var == "peak", pheno.stage %in% c("b","f","s","r")) %>%
   ggplot(aes(x = newtreat, y = mean)) +
   geom_boxplot() +
-  ylab("Doy") + xlab("") +
+  ylab("Doy") + xlab("Treatment") +
   ggtitle("peak") +
   facet_grid(pheno.stage ~origSite) +
   th
@@ -55,7 +54,6 @@ print(DurationCommunity)
 
 
 ## ----nonesense
-
 TimeCommunity <-  pheno.long %>% 
   select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
   #filter(newtreat %in% c("Control", "OTC")) %>% 

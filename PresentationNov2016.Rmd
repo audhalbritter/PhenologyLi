@@ -7,29 +7,34 @@ output: ioslides_presentation
 
 ## Questions and hypothesis
 
-1. Does phenology in alpine grasslands respond to warming?
-2. Do species with certain traits respond differently? Funcitonal Group, flowering time?
-3. Do species respond differently to OTC and transplant?
+1. Do alpine grassland species respond in their phenology to warming?
+2. Do species from different function groups / flowering time respond differently to warming?
+3. Do species respond differ in their phenological in OTC vs. transplants?
 4. How plastic are species in response to warming and cooling?
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, cache = FALSE, message = FALSE, warning = FALSE, fig.height = 5.5, fig.width = 8)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, warning = FALSE, fig.height = 5.5, fig.width = 8)
 knitr::read_chunk("Important Figures.R")
 
 ```
 
+```{r loadPhenology}
+```
 
-## Community approach
-
-```{r peakCommunity, eval = TRUE, echo=FALSE}
-
-#PeakCommunity + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Peak")
+```{r setTheme}
+th <- theme_bw(base_size = 14)
 
 ```
 
-```{r,  echo=FALSE}
-# DurationCommunity + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Duration")
+## Community approach
+```{r peakCommunity, eval = TRUE}
+
+```
+
+## Community approach
+```{r durationCommunity, eval = TRUE}
+
 ```
 
 ## Functional Traits
