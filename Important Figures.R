@@ -1,7 +1,7 @@
 # Figures Presentation
 message("in important figures.R - 1")
 
-## ---- loadPhenology
+## ----loadPhenology
 #load libraries
 library("lme4")
 library("tidyr")
@@ -11,7 +11,10 @@ library("ggplot2")
 library("readxl")
 
 # load data
-load("Pheno.long.RData")
+load("PhenoLong.RData")
+
+# set the theme
+th <- theme()
 
 
 ############################################################################################################################
@@ -28,8 +31,11 @@ PeakCommunity <- pheno.long %>% # first/end time of the 4 stages show the same t
   filter(pheno.var == "peak", pheno.stage %in% c("b","f","s","r")) %>%
   ggplot(aes(x = newtreat, y = mean)) +
   geom_boxplot() +
-  ylab("Doy")+
-  facet_grid(pheno.stage ~origSite)
+  ylab("Doy") + xlab("") +
+  ggtitle("peak") +
+  facet_grid(pheno.stage ~origSite) +
+  th
+print(PeakCommunity)
 
 ## ----durationCommunity
 DurationCommunity <- pheno.long %>% 
@@ -41,8 +47,11 @@ DurationCommunity <- pheno.long %>%
   filter(pheno.stage %in% c("b","f","s","r"), pheno.var == "duration") %>%
   ggplot(aes(x = newtreat, y = mean)) +
   geom_boxplot() +
-  ylab("Days") +
-  facet_grid(pheno.stage ~origSite)
+  ylab("Days") +  xlab("") +
+  ggtitle("duration") +
+  facet_grid(pheno.stage ~origSite) +
+  th
+print(DurationCommunity)
 
 
 ## ----nonesense
