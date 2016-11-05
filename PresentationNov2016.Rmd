@@ -14,7 +14,7 @@ output: ioslides_presentation
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, warning = FALSE, fig.height = 5.5, fig.width = 8)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, warning = FALSE, fig.height = 6, fig.width = 8)
 knitr::read_chunk("Important Figures.R")
 
 ```
