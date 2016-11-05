@@ -5,11 +5,11 @@ date: "5th November 2016"
 output: ioslides_presentation
 ---
 
-## Questions and hypothesis
+## Questions
 
 1. Do alpine grassland species respond in their phenology to warming?
-2. Do species from different function groups / flowering time respond differently to warming?
-3. Do species respond differ in their phenological in OTC vs. transplants?
+2. Do species from different functional groups / flowering time respond differently to warming?
+3. Does the response differe in OTC vs. transplants?
 4. How plastic are species in response to warming and cooling?
 
 
@@ -39,6 +39,13 @@ th <- theme_bw(base_size = 14)
 ```{r loadTreatment}
 
 ```
+
+## Method
+```{r, eval = TRUE}
+knitr::include_graphics("Curve.png")
+
+```
+
 
 
 ## Community approach
