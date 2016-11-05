@@ -16,105 +16,19 @@ load("PhenoLong.RData")
 th <- theme()
 
 
-############################################################################################################################
-#### COMMUNITY FIGURES ####
-############################################################################################################################
+## ----loadTrait
+trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
 
-## ----peakCommunity
-PeakCommunity <- pheno.long %>% # first/end time of the 4 stages show the same tendency with peak
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
-  #filter(newtreat %in% c("Control", "OTC")) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
-  summarize(mean = mean(value), sd = sd(value)) %>% 
-  filter(origSite != "M") %>%
-  filter(pheno.var == "peak", pheno.stage %in% c("b","f","s","r")) %>%
-  ggplot(aes(x = newtreat, y = mean)) +
-  geom_boxplot() +
-  ylab("Doy") + xlab("Treatment") +
-  ggtitle("peak") +
-  facet_grid(pheno.stage ~origSite) +
-  th
-print(PeakCommunity)
-
-## ----durationCommunity
-DurationCommunity <- pheno.long %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
-  #filter(newtreat %in% c("Control", "OTC")) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
-  summarize(mean = mean(value), sd = sd(value)) %>% 
-  filter(origSite != "M") %>%
-  filter(pheno.stage %in% c("b","f","s","r"), pheno.var == "duration") %>%
-  ggplot(aes(x = newtreat, y = mean)) +
-  geom_boxplot() +
-  ylab("Days") +  xlab("") +
-  ggtitle("duration") +
-  facet_grid(pheno.stage ~origSite) +
-  th
-print(DurationCommunity)
+trait <- trait %>% mutate(flTime = 
+                            ifelse(floweringTime %in% c("Apr-Jun", "Apr-May", "Jun", "May-Jun"), "early",
+                                   ifelse(floweringTime %in% c("Jul-Aug", "Apr-Jul", "Jul", "Jun-Jul", "May-Jul", "May-Jul-(Aug)", "summer", "Jun-Aug", "Jun-Sep"), "mid", 
+                                          ifelse(floweringTime %in% c("Aug-Nov", "Aug-Oct", "Aug-Sep", "Jul-Sep", "Jul-Oct"), "late", "always")))
+) %>%
+  mutate(flTime = ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow"), "early", flTime))
+pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
 
 
-## ----nonesense
-TimeCommunity <-  pheno.long %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
-  #filter(newtreat %in% c("Control", "OTC")) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
-  summarize(mean = mean(value), sd = sd(value)) %>% 
-  filter(origSite != "M") %>%
-  filter(pheno.stage %in% c("bf","fs","sr")) %>%
-  ggplot(aes(x = newtreat, y = mean)) +
-  geom_boxplot() +
-  ylab("Days") +
-  facet_grid(pheno.stage ~origSite)
-
-############################################################################################################################
-#### FUNCTIONAL GROUPS FIGURES ####
-############################################################################################################################
-
-PeakFounctionalGroup <- pheno.long %>% #first/end time of each functionalGroup show the same tendency with peak
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
-  #filter(newtreat %in% c("Control", "OTC")) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
-  summarize(mean = mean(value), sd = sd(value)) %>% 
-  filter(origSite != "M", functionalGroup != "shrub") %>%
-  filter(pheno.var == "peak", pheno.stage %in% c("b","f","s","r")) %>%
-  ggplot(aes(x = newtreat, y = mean, color= functionalGroup )) +
-  geom_boxplot() +
-  ylab("Doy")+
-  facet_grid(pheno.stage ~origSite)
-
-DurationFounctionalGroup <- pheno.long %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
-  #filter(newtreat %in% c("Control", "OTC")) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
-  summarize(mean = mean(value), sd = sd(value)) %>% 
-  filter(origSite != "M", functionalGroup != "shrub") %>%
-  filter(pheno.var == "duration") %>%
-  ggplot(aes(x = newtreat, y = mean, color= functionalGroup )) +
-  geom_boxplot() +
-  ylab("Days") +
-  facet_grid(pheno.stage ~origSite)
-
-TimeFounctionalGroup <- pheno.long %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
-  #filter(newtreat %in% c("Control", "OTC")) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
-  summarize(mean = mean(value), sd = sd(value)) %>% 
-  filter(origSite != "M", functionalGroup != "shrub") %>%
-  filter(pheno.stage %in% c("bf","fs","sr")) %>%
-  ggplot(aes(x = newtreat, y = mean, color= functionalGroup )) +
-  geom_boxplot() +
-  ylab("Days") +
-  facet_grid(pheno.stage ~origSite)
-
-
-############################################################################################################################
-#### SPECIES FIGURES ####
-############################################################################################################################
-
-# Compare Treatments
-
-#import the data
-
+## ----loadTreatment
 Treat<- pheno.long %>% 
   #filter(pheno.var == "first", pheno.stage == "f", origSite == "H", species == "Gen.cra") %>% 
   select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
@@ -126,10 +40,130 @@ Treat<- pheno.long %>%
   mutate(newTT = factor(newTT, levels=c("OTC", "Warm", "Cold"))) %>% 
   filter(!is.na(Diff))
 
-  Treat2 <- expand.grid(newTT=unique(Treat$newTT), species=unique(Treat$species), origSite = unique(Treat$origSite), pheno.var = unique(Treat$pheno.var)) %>% data.frame %>% left_join(Treat)
+Treat2 <- expand.grid(newTT=unique(Treat$newTT), species=unique(Treat$species), origSite = unique(Treat$origSite), pheno.var = unique(Treat$pheno.var),pheno.stage = unique(Treat$pheno.stage)) %>% data.frame %>% left_join(Treat)
 
-  # make figures of the first time of different stages
-firstbudSpecies <- Treat2 %>%
+
+
+############################################################################################################################
+#### COMMUNITY FIGURES ####
+############################################################################################################################
+
+## ----PeakCommunity
+PeakCommunity <- pheno.long %>% # first/end time of the 4 stages show the same tendency with peak
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
+  #filter(newtreat %in% c("Control", "OTC")) %>% 
+  group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  filter(origSite != "M") %>%
+  filter(pheno.var == "peak", pheno.stage %in% c("b","f","s","r")) %>%
+  ggplot(aes(x = newtreat, y = mean)) +
+  geom_boxplot() +
+  ylab("Doy") + xlab("Treatment") +
+  ggtitle("Peak") +
+  facet_grid(pheno.stage ~origSite) +
+  th
+  print(PeakCommunity)
+
+## ----DurationCommunity
+DurationCommunity <- pheno.long %>% 
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
+  #filter(newtreat %in% c("Control", "OTC")) %>% 
+  group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  filter(origSite != "M") %>%
+  filter(pheno.stage %in% c("b","f","s","r"), pheno.var == "duration") %>%
+  ggplot(aes(x = newtreat, y = mean)) +
+  geom_boxplot() +
+  ylab("Days") +  xlab("Treatment") +
+  ggtitle("duration") +
+  facet_grid(pheno.stage ~origSite) +
+  th
+  print(DurationCommunity)
+
+
+## ----TimeCommunity
+TimeCommunity <-  pheno.long %>% 
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
+  #filter(newtreat %in% c("Control", "OTC")) %>% 
+  group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  filter(origSite != "M") %>%
+  filter(pheno.stage %in% c("bf","fs","sr")) %>%
+  ggplot(aes(x = newtreat, y = mean)) +
+  geom_boxplot() +
+  ylab("Days") +
+  xlab("Treatment") +
+  ggtitle("Time") +
+  facet_grid(pheno.stage ~origSite)
+
+############################################################################################################################
+#### FUNCTIONAL GROUPS FIGURES ####
+############################################################################################################################
+
+## ----PeakFunctionalGroup
+PeakFunctionalGroup <- pheno.long %>% #first/end time of each functionalGroup show the same tendency with peak
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
+  #filter(newtreat %in% c("Control", "OTC")) %>% 
+  group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  filter(origSite != "M", functionalGroup != "shrub") %>%
+  filter(pheno.var == "peak", pheno.stage %in% c("b","f","s","r")) %>%
+  ggplot(aes(x = newtreat, y = mean, fill= functionalGroup )) +
+  geom_boxplot() +
+  ylab("Doy") +
+  xlabs("Treatment") +
+  ggtitle("Peak") +
+  facet_grid(pheno.stage ~origSite)+
+  th
+  print(PeakFunctionalGroup)
+  
+
+
+## ----DurationFunctionalGroup
+DurationFunctionalGroup <- pheno.long %>% 
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
+  #filter(newtreat %in% c("Control", "OTC")) %>% 
+  group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  filter(origSite != "M", functionalGroup != "shrub") %>%
+  filter(pheno.var == "duration") %>%
+  ggplot(aes(x = newtreat, y = mean, fill= functionalGroup )) +
+  geom_boxplot() +
+  ylab("Days") +
+  xlab("")+
+  ggtitle("Duration")+
+  facet_grid(pheno.stage ~origSite)+
+  th
+  print(DurationFunctionalGroup)
+
+## ----TimeFunctionalGroup
+TimeFunctionalGroup <- pheno.long %>% 
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup) %>% 
+  #filter(newtreat %in% c("Control", "OTC")) %>% 
+  group_by(origSite, species, newtreat, pheno.var, pheno.stage,functionalGroup) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  filter(origSite != "M", functionalGroup != "shrub") %>%
+  filter(pheno.stage %in% c("bf","fs","sr")) %>%
+  ggplot(aes(x = newtreat, y = mean, fill= functionalGroup )) +
+  geom_boxplot() +
+  ylab("Days") +
+  xlab("Treatment") +
+  ggtitle("Time") +
+  facet_grid(pheno.stage ~origSite)+
+  th
+  print(TimeFunctionalGroup)
+## ----nothing 
+
+############################################################################################################################
+#### SPECIES FIGURES ####
+############################################################################################################################
+
+# Compare Treatments
+
+# make figures of the first time of different stages
+
+## ----FirstBudSpecies 
+FirstBudSpecies <- Treat2 %>%
   filter(pheno.var == "first", pheno.stage == "b") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
   geom_bar(position="dodge", stat="identity") +
@@ -137,40 +171,53 @@ firstbudSpecies <- Treat2 %>%
   ylab("Treatment - Control") +
   xlab("") +
   ggtitle("first buds") +
-  facet_wrap(~ origSite)
+  facet_wrap(~ origSite)+
+  th
+  print(FirstBudSpecies)
 
-
-firstfloweringSpecies <- Treat2 %>%
+## ----FirstFloweringSpecies
+FirstFloweringSpecies <- Treat2 %>%
   filter(pheno.var == "first", pheno.stage == "f") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
   geom_bar(position="dodge", stat="identity") +
   coord_flip() +
   ylab("Treatment - Control") +
   xlab("") +
-  ggtitle("first flowering") +
-  facet_wrap(~ origSite)
+  ggtitle("First flowering") +
+  facet_wrap(~ origSite)+
+  th
+ print(FirstFloweringSpecies)
 
-firstseedingSpecies <- Treat2 %>%
+## ----FirstSSeedingSpecies
+FirstSeedingSpecies <- Treat2 %>%
   filter(pheno.var == "first", pheno.stage == "s") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
   geom_bar(position="dodge", stat="identity") +
   coord_flip() +
   ylab("Treatment - Control") +
   xlab("") +
-  ggtitle("first seeding") +
-  facet_wrap(~ origSite)
+  ggtitle("First seeding") +
+  facet_wrap(~ origSite)+
+  th
+print(FirstSeedingSpecies)
 
-firstripeseedSpecies <- Treat2 %>%
+## ----FirstRipeseedSpecies
+FirstRipeseedSpecies <- Treat2 %>%
   filter(pheno.var == "first", pheno.stage == "r") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
   geom_bar(position="dodge", stat="identity") +
   coord_flip() +
   ylab("Treatment - Control") +
   xlab("") +
-  ggtitle("first ripe seeds") +
-  facet_wrap(~ origSite)
+  ggtitle("First Ripe seeds") +
+  facet_wrap(~ origSite)+
+  th
+print(FirstRipeseedSpecies)
 
-  # maike figures of the duration of different stagesD
+
+# maike figures of the duration of different stages
+
+## ----DurationseedingSpecies
 DurationseedingSpecies <- Treat2 %>%
   filter(pheno.var == "duration", pheno.stage == "s") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
@@ -179,9 +226,13 @@ DurationseedingSpecies <- Treat2 %>%
   ylab("Treatment - Control") +
   xlab("") +
   ggtitle("Duration of seeding") +
-  facet_wrap(~ origSite)
+  facet_wrap(~ origSite)+
+  th
+  print(DurationseedingSpecies)
 
-  # duration of the first time of neighboring stages
+# duration of the first time of neighboring stages
+
+## ----TimeBfSpecies
 TimeBfSpecies <- Treat2 %>% #bf is similar with sr
   filter( pheno.stage == "bf") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
@@ -190,8 +241,11 @@ TimeBfSpecies <- Treat2 %>% #bf is similar with sr
   ylab("Treatment - Control") +
   xlab("") +
   ggtitle("Time between first bud and first flower") +
-  facet_wrap(~ origSite)
+  facet_wrap(~ origSite)+
+  th
+  print(TimeBfSpecies)
 
+## ----TimeFsSpecies
 TimeFsSpecies <- Treat2 %>% 
   filter( pheno.stage == "fs") %>%
   ggplot( aes(y = Diff, x = species, fill = newTT)) +
@@ -200,4 +254,9 @@ TimeFsSpecies <- Treat2 %>%
   ylab("Treatment - Control") +
   xlab("") +
   ggtitle("Time between first flower and seeding") +
-  facet_wrap(~ origSite)
+  facet_wrap(~ origSite)+
+  th
+  print(TimeFsSpecies)
+  
+## ----end
+  

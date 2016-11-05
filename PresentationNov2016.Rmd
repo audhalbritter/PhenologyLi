@@ -1,7 +1,7 @@
 ---
 title: "Phenology data 2016"
 author: "Li Zhang and Aud Halbritter"
-date: "1st. November 2016"
+date: "5th November 2016"
 output: ioslides_presentation
 ---
 
@@ -20,6 +20,10 @@ knitr::read_chunk("Important Figures.R")
 ```
 
 ```{r loadPhenology}
+pheno.long %>%
+  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f","s","r","bf","fs","sr")))
+
+
 ```
 
 ```{r setTheme}
@@ -27,36 +31,48 @@ th <- theme_bw(base_size = 14)
 
 ```
 
+```{r loadTrait}
+
+```
+
+
+```{r loadTreatment}
+
+```
+
+
 ## Community approach
-```{r peakCommunity, eval = TRUE}
+```{r PeakCommunity, eval = TRUE}
 
 ```
 
 ## Community approach
-```{r durationCommunity, eval = TRUE}
+```{r DurationCommunity, eval = TRUE}
 
 ```
 
 ## Functional Traits
 
-```{r,  echo=FALSE}
-# PeakFounctionalGroup + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Peak time of different FunctionalGroup")
+```{r DurationFunctionalGroup,  echo=FALSE}
+
 ```
 
-```{r,  echo=FALSE}
-# TimeFounctionalGroup + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("time between neighboring stages")
+## Functional Traits
+
+```{r TimeFunctionalGroup,  echo=FALSE}
+
 ```
 
 ## Compare the treatments
 
-```{r, echo=FALSE}
-
-#firstbudSpecies + theme_grey(base_size = 5) + theme(legend.title=element_blank())# + ggtitle("First buds")
+```{r FirstBudSpecies, echo=FALSE}
 
 ```
 
-```{r, echo=FALSE}
-#TimeFsSpecies + theme_grey(base_size = 5) + theme(legend.title=element_blank())# + ggtitle("...")
+## Compare the treatments
+
+```{r TimeFsSpecies, echo=FALSE}
+
 ```
 
 ## Things to discuss
@@ -67,8 +83,9 @@ th <- theme_bw(base_size = 14)
 
 ## Next steps
 
-- Calculate microclimate effects of different warming methods
-- How species respond to experimental temperature?
-- Gap of the H site climate data.
+- Compare microclimate (air and soil temperature and moisture) between warming treatments
+- Calculate phenological "events" in degree days (days above 5C)
+- Use regression to predict missing air temperature values at H site.
+- Analyse phenological response in different treatments.
 
 
