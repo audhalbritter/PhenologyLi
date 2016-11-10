@@ -39,7 +39,7 @@ pheno %>%
   select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
   gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% 
   filter(value > 0) %>%
-  filter(turfID == "A2-1") %>% 
+  filter(turfID == "A4-1", species == "Car.sp.black") %>% 
   group_by(species, pheno.stage) %>% 
   ggplot(aes(x = doy, y = value, color = pheno.stage)) +
   geom_line() +
@@ -76,7 +76,8 @@ pheno.long <- pheno.long %>%
   gather(key = pheno.stage, value = value, b, f, s, r, BF,FS,SR) %>%
   mutate(pheno.unit = ifelse(pheno.var == "duration", "days",
                              ifelse(pheno.var == "peak" & pheno.stage %in% c("BF", "FS", "SR"), "days", "doy"))) %>%
-           filter(!is.na(value)) # remove empty rows
+           filter(!is.na(value)) %>%  # remove empty rows
+  mutate(value = ifelse(value < 0, NA, value)) # make negative values NA
 
 
 # merge site, block and treatment
