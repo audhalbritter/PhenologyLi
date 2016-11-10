@@ -8,6 +8,8 @@ library("lubridate")
 library("ggplot2")
 library("readxl")
 
+
+#### DATA ####
 dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
 dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
@@ -36,7 +38,7 @@ pheno %>%
   select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
   gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% 
   filter(value > 0) %>%
-  filter(turfID == "H1-1") %>% 
+  filter(turfID == "A2-1") %>% 
   group_by(species, pheno.stage) %>% 
   ggplot(aes(x = doy, y = value, color = pheno.stage)) +
   geom_line() +
@@ -60,7 +62,6 @@ pheno.long <- pheno %>%
   #mutate_each(funs(as.numeric), first, peak, end) %>% # make variables numeric (probably not necessary)
   # make the data nice, rename variables and order them
   mutate(pheno.stage = substring(pheno.stage, nchar(pheno.stage), nchar(pheno.stage))) %>%  # take last letter from pheno.stage
-  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r"))) %>% 
   mutate(duration = end - (first-1)) %>% # calculate duration
   gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) %>%  # create pheno.var and gather 4 variable into 1 column
   mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration")))
@@ -70,10 +71,12 @@ head(pheno.long)
 pheno.long <- pheno.long %>% 
   spread(key = pheno.stage, value = value) %>% 
   # calculate difference in days between bud-flower and flower-seed
-  mutate(bf = ifelse(pheno.var == "first", f-b, NA), fs = ifelse(pheno.var == "first", s-f, NA), sr = ifelse(pheno.var == "first", r-s, NA)) %>%
-  gather(key = pheno.stage, value = value, b, f, s, r, bf, fs, sr) %>%
-  mutate(pheno.unit = ifelse(pheno.var == "duration", "days", ifelse(pheno.var == "first" & pheno.stage %in% c("bf", "fs", "sr"), "days", "doy"))) %>% # create variable pheno.unit, doy: b,f,s,r, days: duration, bf, fs, sr
-  filter(!is.na(value)) # remove empty rows
+  mutate(BF = ifelse(pheno.var == "peak", f-(b-1), NA), FS = ifelse(pheno.var == "peak", s-(f-1), NA), SR = ifelse(pheno.var == "peak", r-(s-1), NA)) %>%
+  gather(key = pheno.stage, value = value, b, f, s, r, BF,FS,SR) %>%
+  mutate(pheno.unit = ifelse(pheno.var == "duration", "days",
+                             ifelse(pheno.var == "peak" & pheno.stage %in% c("BF", "FS", "SR"), "days", "doy"))) %>%
+           filter(!is.na(value)) # remove empty rows
+
 
 # merge site, block and treatment
 pheno.long[,(ncol(pheno.long)+1):(ncol(pheno.long)+4)] <- pheno.dat[match(pheno.long$turfID,pheno.dat$turfID),c("origSite", "destSite", "block", "treatment")]
@@ -86,7 +89,8 @@ pheno.long <- pheno.long %>%
   mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local"))) %>% 
   # make new variable combining Local and Control
   mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold"))) %>% 
-  mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold")))
+  mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold"))) %>%
+  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r", "BF", "FS", "SR"))) %>%
 
 save(pheno.long, file = "PhenoLong.RData")
 
@@ -112,51 +116,4 @@ setdiff(pheno.long$species, trait$sp)
 setdiff(trait$sp, pheno.long$species)
 
 pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
-
-
-# Making Figures for each species
-name <- pheno.long %>% 
-  filter(treatment %in% c("OTC", "Control")) %>% 
-  filter(origSite == "H") %>% 
-  #filter(functionalGroup == "forb") %>% 
-  #filter(flTime == "early") %>%
-  filter(pheno.stage %in% c("f"), pheno.var %in% c("first", "duration")) %>% 
-  #filter(pheno.stage %in% c("bf", "fs", "sr")) %>% 
-  #filter(pheno.var %in% "duration") %>% 
-  group_by(species, treatment, pheno.var) %>% 
-  summarise(mean = mean(value)) %>% 
-  spread(key = treatment, value = mean) %>% 
-  na.omit() %>% 
-  gather(key = treatment, value = value, -species, -pheno.var) %>% 
-  spread(key = pheno.var, value = value) %>% 
-  ggplot(aes(x = first, y = species, color = treatment)) + geom_point() +
-  geom_segment(aes(x=first, xend=(first+duration), y=species, yend=species),size=1)
-
-name + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("H site first flowering")
-
-
-PhenologicalStages <- pheno.long %>% 
-    filter(treatment %in% c("OTC", "Control","Warm","Local")) %>% 
-    filter(origSite %in% c("H", "A")) %>% 
-    filter(functionalGroup %in% c("forb", "graminoid")) %>% 
-    #filter(flTime == c("early", "late")) %>%
-    #filter(pheno.stage %in% c("b", "f", "s"), pheno.var == "first") %>% 
-    #filter(pheno.stage %in% c("bf", "fs", "sr")) %>% 
-    filter(pheno.var %in% "duration") %>% 
-    #group_by(species, treatment) %>% 
-    #summarise(mean = mean(value)) %>% 
-    ggplot(aes(x = treatment, y = value, color = functionalGroup)) +
-    geom_boxplot() +
-    facet_grid(origSite~pheno.stage)
-  
-PhenologicalStages + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("DOY")
-PhenologicalDuration + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Days")
-PhenologicalFirstEnd + theme_grey(base_size = 20) + theme(legend.title=element_blank()) + ggtitle("Days")
-
-
-# Climate data
-pheno.long <- pheno.long %>% mutate(climateID = paste(destSite, value, sep = "_"))
-pheno.long <- pheno.long %>% left_join(CumSum2016, by = "climateID") %>% select(-site, -dateDaily, -n, -mean, -doy)
-
-
 
