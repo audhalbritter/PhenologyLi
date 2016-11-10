@@ -60,7 +60,7 @@ PeakCommunity <- pheno.long %>% # first/end time of the 4 stages show the same t
   geom_boxplot() +
   ylab("Doy") + xlab("Treatment") +
   ggtitle("Peak") +
-  facet_grid(pheno.stage ~origSite) +
+  facet_grid( ~pheno.stage) +
   th
   print(PeakCommunity)
 
