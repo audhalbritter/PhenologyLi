@@ -9,6 +9,7 @@ library("ggplot2")
 library("readxl")
 
 
+
 #### DATA ####
 dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
