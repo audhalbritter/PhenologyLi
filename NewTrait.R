@@ -1,10 +1,10 @@
 
 #################### REDEFINE STAGES AND ALPINE VEGETATION 
 
-library("lme4")
+
 library("tidyr")
 library("dplyr")
-library("lubridate")
+library("readxl")
 
 
 #### TRAIT DATA ####
@@ -18,19 +18,21 @@ head(trait)
 # mid  = May,Jun
 # late = Jul,Aug
 
-#### elevation, compare to tree line
+#### elevation, compare to the tree line of Gongga Mountain
 # alpine = lowerlimit > 3700m 
 # lower = lowerlimit < 3700m
 
-#### RepDuration,according to eflora
+#### flowerDuration,according to eflora
 # long  >1 months
 # short =< 1 months
 
+# import the original trait data
+trait <- trait %>% 
+  mutate(floweringTime = replace(floweringTime, floweringTime == "summer",NA)) # replace summer with NA
+# difine floweringTime according the info from e-Flora Of China 
 NewTrait <- trait %>% 
-  ### FLOWEIRNG TIME
-  mutate(floweringTime = replace(floweringTime, floweringTime == "summer", NA)) %>% # replace summer with NA
-  mutate(first = substr(trait$floweringTime, 1, 3)) %>% # time of first flowering 
-  mutate(end = substr(trait$floweringTime, 5, 7)) %>% #  time of end flowering
+  mutate(first = substr(trait$floweringTime, 1, 3)) %>% # time of first flowering month 
+  mutate(end = substr(trait$floweringTime, 5, 7)) %>% # time of end flowering month 
   # species with only one month of flowering
   mutate(end = ifelse(sp == "Bro.sin","Jul", end)) %>% 
   mutate(end = ifelse(sp == "Sal.sou","Jun", end)) %>%
@@ -54,12 +56,27 @@ NewTrait <- trait %>%
   select(sp, family, functionalGroup, lifeSpan, FlTime, Span, FlowerDuration)
 
   
+#### take first flowering Time and floweringduration info from pheno data
+ Flowering <- pheno.long %>%
+   select(turfID,species, newtreat, value, pheno.var, pheno.stage) %>%
+   filter(pheno.stage == "f") %>% 
+   filter(newtreat == "Control") %>% 
+   filter(pheno.var %in% c( "first", "end", "duration")) %>%
+   group_by(species, pheno.var) %>% 
+   unique() %>%
+   summarise(mean = mean(value)) %>% #mean value of each
+   spread(pheno.var, mean) %>% 
+   select(-end) %>% # delete the "end" cloumn
+   mutate(FlTime2 = ifelse(first < 169, "early",
+                           ifelse(first > 200, "late", "mid")))
+
+ 
 
 
 
-
-# Old Trait stuff
-
+#################################################################################################################
+####Old Trait stuff ######
+#################################################################################################################
 
 # define flowering time
 # early: <= 4 month until June
