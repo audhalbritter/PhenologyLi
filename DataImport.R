@@ -9,7 +9,6 @@ library("ggplot2")
 library("readxl")
 
 
-
 #### DATA ####
 dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
@@ -92,7 +91,7 @@ pheno.long <- pheno.long %>%
   # make new variable combining Local and Control
   mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold"))) %>% 
   mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold"))) %>%
-  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r", "BF", "FS", "SR"))) %>%
+  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r", "BF", "FS", "SR")))
 
 save(pheno.long, file = "PhenoLong.RData")
 
@@ -117,5 +116,5 @@ trait <- trait %>% mutate(flTime =
 setdiff(pheno.long$species, trait$sp)
 setdiff(trait$sp, pheno.long$species)
 
-pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
+pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp")) 
 
