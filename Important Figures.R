@@ -15,6 +15,9 @@ load("PhenoLong.RData")
 # set the theme
 th <- theme()
 
+##############################################################################
+####  FIRST REPORT #### 2016.11.05 ####
+##############################################################################
 
 ## ----loadTrait
 trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
@@ -22,9 +25,8 @@ trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
 trait <- trait %>% mutate(flTime = 
                             ifelse(floweringTime %in% c("Apr-Jun", "Apr-May", "Jun", "May-Jun"), "early",
                                    ifelse(floweringTime %in% c("Jul-Aug", "Apr-Jul", "Jul", "Jun-Jul", "May-Jul", "May-Jul-(Aug)", "summer", "Jun-Aug", "Jun-Sep"), "mid", 
-                                          ifelse(floweringTime %in% c("Aug-Nov", "Aug-Oct", "Aug-Sep", "Jul-Sep", "Jul-Oct"), "late", "always")))
-) %>%
-  mutate(flTime = ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow"), "early", flTime))
+                                          ifelse(floweringTime %in% c("Aug-Nov", "Aug-Oct", "Aug-Sep", "Jul-Sep", "Jul-Oct"), "late", "always")))) %>%
+mutate(flTime = ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow"), "early", flTime))
 pheno.long <- pheno.long %>% left_join(trait, by = c("species" = "sp"))
 
 
@@ -43,9 +45,8 @@ Treat<- pheno.long %>%
 Treat2 <- expand.grid(newTT=unique(Treat$newTT), species=unique(Treat$species), origSite = unique(Treat$origSite), pheno.var = unique(Treat$pheno.var),pheno.stage = unique(Treat$pheno.stage)) %>% data.frame %>% left_join(Treat)
 
 
-
 ############################################################################################################################
-#### COMMUNITY FIGURES ####
+#### COMMUNITY FIGURES #### 2016.11.05 ####
 ############################################################################################################################
 
 ## ----PeakCommunity
@@ -60,13 +61,13 @@ PeakCommunity <- pheno.long %>% # first/end time of the 4 stages show the same t
   geom_boxplot() +
   ylab("Doy") + xlab("Treatment") +
   ggtitle("Peak") +
-  facet_grid( ~pheno.stage) +
+  facet_grid( origSite ~ pheno.stage) +
   th
   print(PeakCommunity)
 
 ## ----DurationCommunity
 DurationCommunity <- pheno.long %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,RepDuration) %>% 
   #filter(newtreat %in% c("Control", "OTC")) %>% 
   group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
   summarize(mean = mean(value), sd = sd(value)) %>% 
@@ -88,7 +89,7 @@ TimeCommunity <-  pheno.long %>%
   group_by(origSite, species, newtreat, pheno.var, pheno.stage) %>% 
   summarize(mean = mean(value), sd = sd(value)) %>% 
   filter(origSite != "M") %>%
-  filter(pheno.stage %in% c("bf","fs","sr")) %>%
+  filter(pheno.stage %in% c("BF","FS","SR")) %>%
   ggplot(aes(x = newtreat, y = mean)) +
   geom_boxplot() +
   ylab("Days") +
@@ -97,7 +98,7 @@ TimeCommunity <-  pheno.long %>%
   facet_grid(pheno.stage ~origSite)
 
 ############################################################################################################################
-#### FUNCTIONAL GROUPS FIGURES ####
+#### FUNCTIONAL GROUPS FIGURES #### 2016.11.05 ####
 ############################################################################################################################
 
 ## ----PeakFunctionalGroup
@@ -155,7 +156,7 @@ TimeFunctionalGroup <- pheno.long %>%
 ## ----nothing 
 
 ############################################################################################################################
-#### SPECIES FIGURES ####
+#### SPECIES FIGURES #### 2016.11.05 ####
 ############################################################################################################################
 
 # Compare Treatments
@@ -259,4 +260,10 @@ TimeFsSpecies <- Treat2 %>%
   print(TimeFsSpecies)
   
 ## ----end
+  
+############################################################################################################################
+###### IMPORT NEWTRAIT #### 2016.11.15 ####
+############################################################################################################################
+
+  
   
