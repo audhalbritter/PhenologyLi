@@ -38,9 +38,9 @@ NewTrait <- trait %>%
   mutate(end = ifelse(sp == "Sal.sou","Jun", end)) %>%
   mutate(FlTime = ifelse(first == "Apr","early",
                         ifelse( first %in% c("May","Jun"),"mid", "late"))) %>%
-  mutate(FlTime = ifelse(sp %in% c("Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow","Gen.sp.white","Pol.mac"), "early",
-                          ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Fes.sp.small","Fra.sp.2","Pol.run","Cer.sze","Tar.lug"),"mid",
-                                 ifelse(sp =="Gen.sp","late", FlTime)))) %>% # define early, mid and late flowering species
+  #mutate(FlTime = ifelse(sp %in% c("Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow","Gen.sp.white","Pol.mac"), "early",
+                          #ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Fes.sp.small","Fra.sp.2","Pol.run","Cer.sze","Tar.lug"),"mid",
+                                 #ifelse(sp =="Gen.sp","late", FlTime)))) %>% # define early, mid and late flowering species
   mutate(FirstMonth = plyr::mapvalues(first, c("Apr","May","Jun","Jul","Aug"), c("4","5","6","7","8"))) %>%
   mutate(EndMonth = plyr::mapvalues(end, c("May","Jun","Jul","Aug","Sep","Oct","Nov"), c("5","6","7","8","9","10","11"))) %>%
   mutate(FlowerDuration = ifelse(as.numeric(EndMonth)-as.numeric(FirstMonth) < 2,"short","long")) %>% # Warning because there are NA's. We have no information for these species
@@ -66,10 +66,23 @@ NewTrait <- trait %>%
    unique() %>%
    summarise(mean = mean(value)) %>% #mean value of each
    spread(pheno.var, mean) %>% 
-   select(-end) %>% # delete the "end" cloumn
-   mutate(FlTime2 = ifelse(first < 169, "early",
-                           ifelse(first > 200, "late", "mid")))
+   # acording to T. DORJI et al, 2012
+   # early = mean of first flowring before 10th,Jun(Doy:160)
+   # late = mean of first flowering later than 19th,Jul(Doy:200)
+   # otherwise = mid
+   mutate(FlTime2 = ifelse(first < 160, "early",
+                           ifelse(first > 200, "late", "mid"))) %>%
+   # short = durtion < mean duration
+   # long = durationg >= mean duration
+   mutate(flowerduration2 = ifelse(duration < 10, "short", "long")) %>%
+   select(-first,-duration,-end)  # delete the "end" cloumn
+ 
+ 
+ 
+ #### match NewTrait data with Flowering
+ #### i.e. compare/add the info from eflora and pheno data
 
+NewTrait <- NewTrait %>% left_join(Flowering, by = c("sp" = "species")) 
  
 
 
