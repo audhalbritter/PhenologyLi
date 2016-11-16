@@ -58,3 +58,20 @@ CalcSums <- function(dat){
   dat$nr.r[dat$nr.r == 0] <- NA
   return(dat)
 }
+
+
+#### Function to produce model-checking plots for the fixed effects of an lmer model
+ModelCheck <- function(mod){		
+  par(mfrow = c(2,2))
+  # Residual plot: checking homogeneity of the variance
+  plot(fitted(mod),resid(mod))	            #should have no pattern
+  abline(h=0)
+  # test for relashionship between residuals and fitted values
+  print(anova(lm(fitted(mod)~resid(mod))))	#should be non-significant
+  # QQnorm plot: normal distribution of the residuals
+  qqnorm(resid(mod), ylab="Residuals")		  #should be approximately straight line
+  qqline(resid(mod))
+  # Check the distribution of the residuals
+  plot(density(resid(mod)))					        #should be roughly normally distributed
+  rug(resid(mod))}
+
