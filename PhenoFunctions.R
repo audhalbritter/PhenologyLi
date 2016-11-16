@@ -95,3 +95,35 @@ overdisp_fun <- function(model) {
   pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
   c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
 }
+
+
+# Function to calculate QAICc
+# NB, phi is the scaling parameter from the quasi-family model. If using e.g. a poisson family, phi=1 and QAICc returns AICc, or AIC if QAICc=FALSE.
+QAICc <- function(mod, scale, QAICc = TRUE) {
+  ll <- as.numeric(logLik(mod))
+  df <- attr(logLik(mod), "df")
+  n <- length(resid(mod))
+  if (QAICc)
+    qaic = as.numeric(-2 * ll/scale + 2 * df + 2 * df * (df + 1)/(n - df - 1))
+  else qaic = as.numeric(-2 * ll/scale + 2 * df)
+  qaic
+}
+
+
+# Model selection
+modsel <- function(mods,x){	
+  phi=1
+  dd <- data.frame(Model=1:length(mods), K=1, QAIC=1)
+  for(j in 1:length(mods)){
+    dd$K[j] = attr(logLik(mods[[j]]),"df")
+    dd$QAIC[j] = QAICc(mods[[j]],phi)
+  }
+  dd$delta.i <- dd$QAIC - min(dd$QAIC)
+  dd <- subset(dd,dd$delta.i<x)
+  dd$re.lik <- round(exp(-0.5*dd$delta.i),3)
+  sum.aic <- sum(exp(-0.5*dd$delta.i))
+  wi <- numeric(0)
+  for (i in 1:length(dd$Model)){wi[i] <- round(exp(-0.5*dd$delta.i[i])/sum.aic,3)}; dd$wi<-wi
+  print(dds <- dd[order(dd$QAIC), ])
+  assign("mstable",dd,envir=.GlobalEnv)
+}
