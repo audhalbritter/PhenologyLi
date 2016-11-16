@@ -8,8 +8,12 @@ library("lubridate")
 
 
 #### TRAIT DATA ####
- 
-#### redifine the flowering Time ####
+# read in trait data
+trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
+head(trait) 
+
+
+#### redifine the flowering Time according to first month of flowering ####
 # early = Apr
 # mid  = May,Jun
 # late = Jul,Aug
@@ -19,34 +23,53 @@ library("lubridate")
 # lower = lowerlimit < 3700m
 
 #### RepDuration,according to eflora
-# long  >3 months
-# short =< 3 months
+# long  >1 months
+# short =< 1 months
 
 NewTrait <- trait %>% 
-  mutate( first= substr(trait$floweringTime,1,3)) %>% # time of first flowring 
-  mutate( end = substr(trait$fruitsTime,5,7)) %>% #  time of end friut
-  mutate( end = ifelse(sp %in% c("Cya.inf","Dey.pul","Eup.reg","Par.pus","Pri.ame","Ran.tan","Ver.sze"),substr(trait$floweringTime,5,7),
-                       ifelse(sp == "Cli.pol","Sep",
-                              ifelse(sp =="Ped.mus","Aug",
-                                     ifelse(sp =="Bro.sin","Jul",end ))))) %>%
-  mutate( FlTime = ifelse(first == "Apr","early",
-                        ifelse( first %in% c("MAy","Jun"),"mid", "late"))) %>%
-  mutate( FlTime = ifelse(sp %in% c("Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow","Gen.sp.white","Pol.mac"), "early",
+  ### FLOWEIRNG TIME
+  mutate(floweringTime = replace(floweringTime, floweringTime == "summer", NA)) %>% # replace summer with NA
+  mutate(first = substr(trait$floweringTime, 1, 3)) %>% # time of first flowering 
+  mutate(end = substr(trait$floweringTime, 5, 7)) %>% #  time of end flowering
+  # species with only one month of flowering
+  mutate(end = ifelse(sp == "Bro.sin","Jul", end)) %>% 
+  mutate(end = ifelse(sp == "Sal.sou","Jun", end)) %>%
+  mutate(FlTime = ifelse(first == "Apr","early",
+                        ifelse( first %in% c("May","Jun"),"mid", "late"))) %>%
+  mutate(FlTime = ifelse(sp %in% c("Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow","Gen.sp.white","Pol.mac"), "early",
                           ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Fes.sp.small","Fra.sp.2","Pol.run","Cer.sze","Tar.lug"),"mid",
-                                 ifelse(sp =="Gen.sp","late",FlTime )))) %>%
-  mutate( FirstMouth = plyr::mapvalues(first, c("Apr","May","Jun","Jul","Aug","sum"),c("4","5","6","7","8","6"))) %>%
-  mutate( EndMouth = plyr::mapvalues(end, c("Jun","Jul","Aug","Sep","Oct","Nov"),c("6","7","8","9","10","11"))) %>%
-  mutate( RepDuration = ifelse(as.numeric(EndMouth)-as.numeric(FirstMouth) < 4,"short","long")) %>%
-  mutate( RepDuration = ifelse(functionalGroup %in% c("graminoid"),"long",RepDuration)) %>%
-  mutate( RepDuration = ifelse(sp %in% c("Cer.sze","Pol.mac","Pol.viv","Eup.reg","Fra.sp.2","Gen.sp","Gen.sp.white","Pri.ame","Ver.sze","Tar.lug"),"short",
-                                     ifelse(sp %in% c("Par.pus","Cya.inf","Ran.tan"),"long",RepDuration))) %>%
-  mutate( Span = ifelse( lowerLimit > 3700,"alpine","lower")) %>%
-  mutate( Span = ifelse( sp %in% c("Art.fla","Car.sp.black","Car.sp.yellow","Hal.ell","Tri.rep"),"lower",
+                                 ifelse(sp =="Gen.sp","late", FlTime)))) %>% # define early, mid and late flowering species
+  mutate(FirstMonth = plyr::mapvalues(first, c("Apr","May","Jun","Jul","Aug"), c("4","5","6","7","8"))) %>%
+  mutate(EndMonth = plyr::mapvalues(end, c("May","Jun","Jul","Aug","Sep","Oct","Nov"), c("5","6","7","8","9","10","11"))) %>%
+  mutate(FlowerDuration = ifelse(as.numeric(EndMonth)-as.numeric(FirstMonth) < 2,"short","long")) %>% # Warning because there are NA's. We have no information for these species
+  #mutate(FlowerDuration = ifelse(sp %in% c("Cer.sze","Pol.mac","Pol.viv","Eup.reg","Fra.sp.2","Gen.sp","Gen.sp.white","Pri.ame","Ver.sze","Tar.lug"), "short",
+                                     #ifelse(sp %in% c("Par.pus","Cya.inf","Ran.tan"),"long", FlowerDuration))) %>% ### !!! NEED TO FIX THIS LIST OF SP; MAYBE CHECK IN DATA
+  
+  ### ELEVATION
+  mutate(Span = ifelse(lowerLimit > 3700, "alpine", "lower")) %>%
+  mutate(Span = ifelse(sp %in% c("Art.fla","Car.sp.black","Car.sp.yellow","Hal.ell","Tri.rep"),"lower",
                                   ifelse( sp %in% c("Car.sp.black.big","Car.sp.middle","Fes.sp.big",
                                                     "Fes.sp.small","Fra.sp.2","Gen.sp","Gen.sp.white",
-                                                    "Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow","Par.pus"),"alpine", Span))) %>%
-  select(sp,family,functionalGroup,lifeSpan,FlTime,Span,RepDuration)
+                                                    "Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow","Par.pus"),"alpine", Span))) %>% # speceis with NA for lower limit; alpine = sp only found at A or H site
+  select(sp, family, functionalGroup, lifeSpan, FlTime, Span, FlowerDuration)
 
-# macth data
-pheno.long <- pheno.long %>% left_join(NewTrait, by = c("species" = "sp")) 
   
+
+
+
+
+# Old Trait stuff
+
+
+# define flowering time
+# early: <= 4 month until June
+# mid: <= 4 month and between April and August
+# late: <= 4 month from July
+# late: >= 4 month
+trait <- trait %>% mutate(flTime = 
+                            ifelse(floweringTime %in% c("Apr-Jun", "Apr-May", "Jun", "May-Jun"), "early",
+                                   ifelse(floweringTime %in% c("Jul-Aug", "Apr-Jul", "Jul", "Jun-Jul", "May-Jul", "May-Jul-(Aug)", "summer", "Jun-Aug", "Jun-Sep"), "mid", 
+                                          ifelse(floweringTime %in% c("Aug-Nov", "Aug-Oct", "Aug-Sep", "Jul-Sep", "Jul-Oct"), "late", "always")))
+) %>%
+  mutate(flTime = ifelse(sp %in% c("Car.sp.black","Car.sp.black.big","Car.sp.middle","Car.sp.yellow","Fes.sp.big","Kob.sp.sigan","Kob.sp.small","Kob.sp.yellow"), "early", flTime))
+
