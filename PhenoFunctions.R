@@ -60,6 +60,7 @@ CalcSums <- function(dat){
 }
 
 
+#### FUNCTIONS FOR ANALYSIS ####
 #### Function to produce model-checking plots for the fixed effects of an lmer model
 ModelCheck <- function(mod){		
   par(mfrow = c(2,2))
@@ -75,3 +76,22 @@ ModelCheck <- function(mod){
   plot(density(resid(mod)))					        #should be roughly normally distributed
   rug(resid(mod))}
 
+
+### Test overdispersion
+# compare the residual deviance to the residual degrees of freedom
+# these are assumed to be the same.
+
+overdisp_fun <- function(model) {
+  ## number of variance parameters in 
+  ##   an n-by-n variance-covariance matrix
+  vpars <- function(m) {
+    nrow(m)*(nrow(m)+1)/2
+  }
+  model.df <- sum(sapply(VarCorr(model),vpars))+length(fixef(model))
+  rdf <- nrow(model.frame(model))-model.df
+  rp <- residuals(model,type="pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq/rdf
+  pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+  c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
