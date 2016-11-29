@@ -91,7 +91,8 @@ pheno.long <- pheno.long %>%
   # make new variable combining Local and Control
   mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold"))) %>% 
   mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold"))) %>%
-  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r", "bf", "fs", "sr")))
+  mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("b", "f", "s", "r", "bf", "fs", "sr"), c("Bud", "Flower", "Seed", "Ripe", "BudFlower", "FlowerSeed", "SeedRipe"))) %>% 
+  mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe", "BudFlower", "FlowerSeed", "SeedRipe")))
 
 
 
