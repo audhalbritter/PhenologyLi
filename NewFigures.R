@@ -5,12 +5,12 @@ MeanSE %>% filter(treatment %in% c("Control", "Warm")) %>%
   facet_wrap(~ pheno.stage)
 
 
-
+library("cowplot")
 # Get Mean and SE
 head(pheno.long)
 MeanSE <- pheno.long %>% 
-  filter(!newtreat %in% c("Cold"), pheno.var == "peak", pheno.unit == "doy", pheno.stage != "Ripe") %>% 
-  group_by(newtreat, origSite, pheno.stage) %>% 
+  filter(!newtreat %in% c("Cold"), pheno.var == "peak", pheno.unit == "doy", !pheno.stage %in% c("Ripe", "SeedRipe")) %>% 
+  group_by(newtreat, origSite, pheno.stage, species) %>% 
   summarise(N = sum(!is.na(value)), mean = mean(value, na.rm = TRUE), se = sd(value, na.rm = TRUE)/sqrt(N))
 
 # Calculate difference between Control and Treatment for SE
@@ -19,22 +19,27 @@ SEData <- MeanSE %>%
   select(-mean, -N) %>% # remove site, because it causes problems
   spread(key = newtreat, value = se) %>% # spread Treatments
   mutate(Warm = Warm - Control, OTC = OTC - Control) %>% # Difference Treatment - Control
-  gather(key = Treatment, value = SE, -origSite, -pheno.stage, -Control) %>% # gather Treatments
-  select(SE, origSite, pheno.stage, Treatment)
+  gather(key = Treatment, value = SE, -origSite, -pheno.stage, -Control, -species) %>% # gather Treatments
+  select(SE, origSite, pheno.stage, Treatment, species)
 
 # Calculate difference between Control and Treatment for Mean
+#SPOnlyInOneTreatment
 MeanData <- MeanSE %>% 
   ungroup() %>% 
   select(-se, -N) %>% # remove site, because it causes problems
   spread(key = newtreat, value = mean) %>% # spread Treatments
   mutate(Warm = Warm - Control, OTC = OTC - Control) %>% # Difference Treatment - Control
-  gather(key = Treatment, value = Difference, -origSite, -pheno.stage, -Control) %>% # gather Treatments
+  gather(key = Treatment, value = Difference, -origSite, -pheno.stage, -Control, -species) %>% # gather Treatments
   mutate(newname = paste(origSite, Treatment, sep = "_")) %>% # paste Treatment and site, they are unique and can be renamed
   mutate(newname = plyr::mapvalues(newname, c("H_OTC", "A_OTC", "H_Warm", "A_Warm"), c("High alpine OTC", "Alpine OTC", "High alpine Warm", "Alpine Warm"))) %>% 
   mutate(newname = factor(newname, levels = c("High alpine OTC", "Alpine OTC", "High alpine Warm", "Alpine Warm"))) %>% 
-  left_join(SEData, by = c("origSite" = "origSite", "pheno.stage" = "pheno.stage", "Treatment" = "Treatment"))  # join SW
+  left_join(SEData, by = c("origSite" = "origSite", "pheno.stage" = "pheno.stage", "Treatment" = "Treatment", "species" = "species")) %>%   # join SW
+  #filter(is.na(Difference))
+  select(-Control) %>% 
+  filter(!is.na(Difference)) %>% 
+  group_by(origSite, pheno.stage, Treatment, newname) %>% 
+  summarise(Difference = mean(Difference, na.rm = TRUE), SE = mean(SE, na.rm = TRUE))
 
-library("cowplot")
 DifferencePlot <- ggplot(MeanData, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
   geom_hline(yintercept=0, color = "gray") +
   geom_point(size = 1.8) +
@@ -49,8 +54,13 @@ DifferencePlot <- ggplot(MeanData, aes(x = newname, y = Difference, color = Trea
 print(DifferencePlot)
 save_plot("DifferencePlot_Doy.jpeg", DifferencePlot,base_aspect_ratio = 1.8)
 
+pheno.long %>% 
+  filter(pheno.stage == "Flower", pheno.var == "peak", newtreat %in% c("Control", "OTC"), origSite == "A") %>% 
+  ggplot(aes(x = newtreat, y = value, color = species, group = species)) + geom_point() + geom_line()
 
 
+table(SPOnlyInOneTreatment$species, SPOnlyInOneTreatment$pheno.stage)
+hist(SPOnlyInOneTreatment$Control)
 
 
 
