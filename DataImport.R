@@ -70,11 +70,11 @@ head(pheno.long)
 #### CALCULATE DAYS BETWEEN FIRST BUD AND FLOWER, FLOWER AND SEED ETC (PHENO.STAGES IN DAYS) ####
 pheno.long <- pheno.long %>% 
   spread(key = pheno.stage, value = value) %>% 
-  # calculate difference in days between bud-flower and flower-seed
-  mutate(BF = ifelse(pheno.var == "peak", f-(b-1), NA), FS = ifelse(pheno.var == "peak", s-(f-1), NA), SR = ifelse(pheno.var == "peak", r-(s-1), NA)) %>%
-  gather(key = pheno.stage, value = value, b, f, s, r, BF,FS,SR) %>%
+  # calculate difference in days between peak bud-flower and flower-seed
+  mutate(bf = ifelse(pheno.var == "peak", f-(b-1), NA), fs = ifelse(pheno.var == "peak", s-(f-1), NA), sr = ifelse(pheno.var == "peak", r-(s-1), NA)) %>%
+  gather(key = pheno.stage, value = value, b, f, s, r, bf, fs, sr) %>%
   mutate(pheno.unit = ifelse(pheno.var == "duration", "days",
-                             ifelse(pheno.var == "peak" & pheno.stage %in% c("BF", "FS", "SR"), "days", "doy"))) %>%
+                             ifelse(pheno.var == "peak" & pheno.stage %in% c("bf", "fs", "sr"), "days", "doy"))) %>%
            filter(!is.na(value)) %>%  # remove empty rows
   mutate(value = ifelse(value < 0, NA, value)) # make negative values NA
 
@@ -91,13 +91,12 @@ pheno.long <- pheno.long %>%
   # make new variable combining Local and Control
   mutate(newtreat = plyr::mapvalues(treatment, c("OTC", "Control", "Local", "Warm", "Cold"), c("OTC", "Control", "Control", "Warm", "Cold"))) %>% 
   mutate(newtreat = factor(newtreat, levels=c("Control", "OTC", "Warm", "Cold"))) %>%
-  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r", "BF", "FS", "SR")))
+  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r", "bf", "fs", "sr")))
 
 
 
 # Left_join trait data
-pheno.long <- pheno.long %>% left_join(NewTrait, by = c("species" = "sp")) 
-
+pheno.long <- pheno.long %>% left_join(NewTrait, by = c("species" = "sp"))
 # check species
 setdiff(pheno.long$species, NewTrait$sp)
 setdiff(NewTrait$sp, pheno.long$species)

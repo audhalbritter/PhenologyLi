@@ -2,23 +2,21 @@
 ### ANALYSE PHENOLOGY DATA ###
 ########################################
 
-#### LIBRARIES ####
-library("lme4")
-library("tidyr")
-library("dplyr")
-
-
 #### Analyse Models
-Dat <- pheno.long %>% 
-  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage) %>% 
-  group_by(origSite, species, newtreat, pheno.var, pheno.stage)
-  
-dat <- Dat %>%  
-  filter(origSite == "H") %>%
-  filter(newtreat %in% c("Control", "OTC","Warm")) %>% 
-  filter(pheno.var == "peak", pheno.stage %in% c("b"))
+
+Dat <-  pheno.long %>%
+  select(turfID, species, newtreat, origSite, block, value, pheno.var, pheno.stage,functionalGroup, FlTime, Span) %>% 
+  group_by(origSite, block, species, newtreat, pheno.var, pheno.stage, functionalGroup, FlTime, Span) %>% 
+  filter(origSite != "M", functionalGroup != "shrub") %>%
+  filter(newtreat != "Cold")
 
 # fit simple regression/anova
+
+dat <- Dat %>%
+  filter(origSite == "H") %>%
+  filter(pheno.stage == "bf")
+
+
 fit.lm <- lm( value ~ newtreat, data = dat )
 anova(fit.lm)
 hist(dat$value)
@@ -33,15 +31,16 @@ hist(log(dat$value))
 
 
 # GLM for count data
-fit.glm <- glm(value ~ newtreat, data = dat, family = "poisson")
+fit.glm <- glm(value ~ newtreat, data = dat, family = "poisson") #quasipoisson
 summary(fit.glm)
- plot(fit.glm)
+plot(fit.glm)
 
 
 
 # Mixed Effects Model including block
-fit.glmm <- glmer(value ~ newtreat + (1|block), data = dat, family = "poisson")
+fit.glmm <- glmer(value ~ newtreat + (1|species), data = dat, family = "poisson")
 summary(fit.glmm)
+plot(fit.glmm)
 
 # Mixed Effects Model including species
 fit.glmm <- glmer(value ~ newtreat + (1|species) + (1|block), data = dat, family = "poisson")
@@ -50,15 +49,17 @@ plot(fit.glmm)
 
 # backtransform the data
 newdat <- expand.grid(
-  newtreat=c("Control", "OTC")
+  newtreat=c("Control", "OTC","Warm")
   , value = 0
 )
 mm <- model.matrix(terms(fit.glmm), newdat)
 newdat$value <- predict(fit.glmm, newdat, re.form = NA, type="response")
+newdat$value
 
 ### Test overdispersion
 # compare the residual deviance to the residual degrees of freedom
 # these are assumed to be the same.
+
 
 overdisp_fun <- function(model) {
   ## number of variance parameters in 
@@ -107,9 +108,36 @@ modsel <- function(mods,x){
 }
 
 # Test if treatment is important using model selection
-fit.glmm1 <- glmer(value ~ newtreat + (1|block) + (1|species), data = dat, family = "poisson")
+fit.glmm1 <- glmer(value ~ newtreat +  (1|block) + (1|species), data = dat, family = "poisson")
 fit.glmm2 <- glmer(value ~ 1 + (1|block) + (1|species), data = dat, family = "poisson")
+fit.glmm3 <- glmer(value ~ newtreat +  (1|species), data = dat, family = "poisson")
+fit.glmm4 <- glmer(value ~ 1 + (1|species), data = dat, family = "poisson")
 
-modsel(list(fit.glmm1, fit.glmm2), 1000)
+modsel(list(fit.glmm1, fit.glmm2, fit.glmm3, fit.glmm4), 1000)
  
+
+#######################################################################################################
+## for Doy index:
+#fit.glmm <- glmer(value ~ newtreat +  (1|species), data = dat, family = "poisson");
+## for days index, always overdispersion
+#######################################################################################################
+
+# part1: Community
+
+HFirstB <- Dat %>%
+  filter(origSite == "H") %>%
+  #filter(functionalGroup == "gramnoid") %>%
+  #filter(FlTime == "late") %>%
+  filter(Span == "alpine") %>%
+  filter(pheno.var == "first") %>%
+  filter(pheno.stage == "f") 
+fit.glmm <- glmer(value ~ newtreat + (1|species), data = HFirstB, family = "poisson")
+summary(fit.glmm)
+plot(fit.glmm)
+newdat$value <- predict(fit.glmm, newdat, re.form = NA, type="response")
+newdat$value
+overdisp_fun(fit.glmm)
+
+
+
 
