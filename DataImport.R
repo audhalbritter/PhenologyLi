@@ -12,7 +12,7 @@ library("readxl")
 load(file = "taxa.RData")
 
 
-#### DATA ####
+#### IMPORT DATA ####
 dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
 dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
 dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
@@ -21,6 +21,12 @@ pheno.dat <- pheno.dat %>% filter(turfID != "")
 #head(pheno.dat)
 #str(pheno.dat) 
 
+#### META DATA ####
+meta.pheno <- pheno.dat %>% 
+  distinct(turfID, origSite, destSite, block, treatment)
+
+
+## DATA CORRECTIONS ##
 # Replace wrong names
 pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Pol.leu","Pot.leu"))%>%
@@ -56,9 +62,10 @@ setdiff(pheno.dat$species, taxa$species)
 
 # Calculate Sums of bud, flower etc.
 pheno <- CalcSums(pheno.dat)
-head(pheno)
+#head(pheno)
 
-# Phenology maps
+# **************************************************
+# MAKE PHENOLOGY MAPS
 PhenologyMap <- function(df){
   ggplot(df, aes(x = doy, y = value, color = pheno.stage)) + 
     geom_line() + 
@@ -81,6 +88,7 @@ phenoMaps <- pheno %>%
 pdf(file = "Phenologymaps.pdf")
 phenoMaps$pheno.maps
 dev.off()
+# **************************************************
 
 
 # Remove species
@@ -123,17 +131,17 @@ pheno.long <- pheno %>%
   mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration")))
 head(pheno.long)
 
-# Check all species with more than 3 occurrences per species, site, treatment and pheno.var
-pheno.long %>% 
-  group_by(species, turfID, pheno.stage, pheno.var) %>% 
+## List of species with more than 3 occurrences per species, site, treatment and pheno.var
+sp.list <- pheno.long %>% 
+  filter(pheno.var == "first") %>% 
+  group_by(species, turfID, pheno.stage) %>% 
   summarise(n = n()) %>%
   mutate(new.var = turfID) %>% 
   mutate(originSite = substr(turfID, 1, 1)) %>% 
   separate(col = new.var, into = c("block", "treatment"), sep = "-") %>% 
-  filter(pheno.var == "first") %>% 
   group_by(species, pheno.stage, treatment, originSite) %>% 
   summarize(n = n()) %>% 
-  filter(n < 3) %>% pn
+  filter(n > 2)
 
 
 #### CALCULATE DAYS BETWEEN FIRST BUD AND FLOWER, FLOWER AND SEED ETC (PHENO.STAGES IN DAYS) ####
