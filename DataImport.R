@@ -1,12 +1,15 @@
 # IMPORT DATA
 
+pn <- . %>% print(n = Inf)
+
 #### LIBRARIES ####
 library("lme4")
-library("tidyr")
-library("dplyr")
+library("tidyverse")
 library("lubridate")
 library("ggplot2")
 library("readxl")
+
+load(file = "taxa.RData")
 
 
 #### DATA ####
@@ -15,8 +18,8 @@ dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
 dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
 pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),])
 pheno.dat <- pheno.dat %>% filter(turfID != "")
-head(pheno.dat)
-str(pheno.dat) 
+#head(pheno.dat)
+#str(pheno.dat) 
 
 # Replace wrong names
 pheno.dat <- pheno.dat %>%
@@ -26,23 +29,76 @@ pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% 
   mutate(species=replace(species,species=="Agr.ner","Agr.sp")) %>% 
   mutate(species=replace(species,species=="Jun.all","Jun.leu")) %>% 
-  mutate(species=replace(species,species=="Gal.spa","Gal.hof"))
+  mutate(species=replace(species,species=="Gal.spa","Gal.hof")) %>% 
+  mutate(species=replace(species,species=="Voi.sze","Vio.sze"))
+
+# Change names to match community and trait data
+pheno.dat <- pheno.dat %>% 
+  #mutate(species = replace(species, species %in% c("Car.sp.black", "Car.sp.black.big", "Car.sp.middle", "Car.sp.yellow", "Car.L"), "Car.spp")) %>% 
+  #mutate(species = replace(species, species %in% c("Kob.sp.small", "Kob.sp.sigan", "Kob.sp.yellow"), "Kob.spp")) %>% 
+  mutate(species = replace(species, species %in% c("Fes.sp.big", "Fes.sp.small"), "Fes.spp")) %>% 
+  mutate(species = replace(species, species %in% c("Luz.mul"), "Luzula")) %>% 
+  mutate(species = replace(species, species %in% c("Gen.sp", "Gen.sp.white"), "Gen.spp")) %>% 
+  mutate(species = replace(species, species %in% c("Eup.reg"), "Eup.L")) %>% 
+  mutate(species = replace(species, species %in% c("Agr.sp"), "Agr.spp")) %>% 
+  mutate(species = replace(species, species %in% c("Sax.lin"), "Saxifrage")) %>% 
+  mutate(species = replace(species, species %in% c("Oxy.gla"), "Oxy.yun")) %>% 
+  mutate(species = replace(species, species %in% c("Fra.sp.2"), "Fra.spp")) %>% 
+  mutate(species = replace(species, species %in% c("Dey.pul"), "Cal.lah")) %>% 
+  mutate(species = replace(species, species %in% c("Dey.sca"), "Cal.sca")) %>% 
+  mutate(species = replace(species, species %in% c("All.cya"), "All.pra")) %>% 
+  mutate(species = replace(species, species %in% c("Sau.cet", "Sau.gra", "Sau.hie", "Sau.pac", "Sau.sub"), "Sau.spp"))
+  
+# Compare community taxa table with phenology data
+setdiff(pheno.dat$species, taxa$species)
+# Ok in trait: Cya.inc, Sal.sou, Ped.ver, Sau.hie, Sau.sub, Lom.car, Bro.sin, Tar.lug
+
 
 # Calculate Sums of bud, flower etc.
 pheno <- CalcSums(pheno.dat)
 head(pheno)
 
+# Phenology maps
+PhenologyMap <- function(df){
+  ggplot(df, aes(x = doy, y = value, color = pheno.stage)) + 
+    geom_line() + 
+    geom_point() +
+    facet_wrap(~ turfID) +
+    ggtitle(unique(df$species))
+}
 
-# Check data, make figures for pheno.stages
-pheno %>% 
+## plot maps
+phenoMaps <- pheno %>% 
   select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
-  gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% 
-  filter(value > 0) %>%
-  filter(turfID == "A4-1", species == "Car.sp.black") %>% 
-  group_by(species, pheno.stage) %>% 
-  ggplot(aes(x = doy, y = value, color = pheno.stage)) +
-  geom_line() +
-  facet_wrap(~ species, scales = "free")
+  gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% # make variable pheno.stage
+  filter(value > 0) %>% 
+  group_by(species) %>% 
+  do(pheno.maps = PhenologyMap(.))
+
+## Now open up a pdf file and write all the plots out as separate pages
+## the output pdf will be located in the getwd() directory named 'Rplots.pdf'
+##
+pdf(file = "Phenologymaps.pdf")
+phenoMaps$pheno.maps
+dev.off()
+
+
+# Remove species
+pheno <- pheno %>% 
+  # remove species only on one or two turfs
+  filter(!species %in% c("Saxifrage", "Ari.par", "Ast.ast", "Fra.spp", "Sal.sou", "Sib.pro", "Sag.jap", "Ane.dem", "Kob.sp.small", "Car"))
+  
+
+# Find species with > 2 observation per origSite, treatment and pheno.stage
+pheno %>%
+  select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
+  gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% # make variable pheno.stage
+  filter(value > 0, species == "Agr.spp", pheno.stage == "nr.s") %>%
+  group_by(origSite, block, treatment) %>% 
+  summarise(n = n()) %>% 
+  mutate(n2 = 1) %>% 
+  group_by(species, origSite, treatment, pheno.stage) %>% 
+  summarise(sum(n2))
 
 
 
@@ -66,6 +122,19 @@ pheno.long <- pheno %>%
   gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) %>%  # create pheno.var and gather 4 variable into 1 column
   mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration")))
 head(pheno.long)
+
+# Check all species with more than 3 occurrences per species, site, treatment and pheno.var
+pheno.long %>% 
+  group_by(species, turfID, pheno.stage, pheno.var) %>% 
+  summarise(n = n()) %>%
+  mutate(new.var = turfID) %>% 
+  mutate(originSite = substr(turfID, 1, 1)) %>% 
+  separate(col = new.var, into = c("block", "treatment"), sep = "-") %>% 
+  filter(pheno.var == "first") %>% 
+  group_by(species, pheno.stage, treatment, originSite) %>% 
+  summarize(n = n()) %>% 
+  filter(n < 3) %>% pn
+
 
 #### CALCULATE DAYS BETWEEN FIRST BUD AND FLOWER, FLOWER AND SEED ETC (PHENO.STAGES IN DAYS) ####
 pheno.long <- pheno.long %>% 
