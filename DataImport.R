@@ -123,8 +123,16 @@ ThreeOccurences <- pheno.long %>%
   summarize(n = n()) %>% 
   filter(n > 2)
 
-# check cases
-#table(pheno.long$species, pheno.long$treatment)
+# Select species that occur in at least 2 treatments
+NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT))
+sp.list <- NrTreat %>% 
+  filter(Freq > 0) %>% 
+  group_by(Var1) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 1) %>%
+  # remove sp with c and treat not at same site
+  filter(!Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
+  select(-n)
 
 # Reduce nr. species 
 pheno.long <- pheno.long %>% 
@@ -132,7 +140,9 @@ pheno.long <- pheno.long %>%
   inner_join(ThreeOccurences, by = c("species", "pheno.stage", "newTT", "origSite")) %>% 
   select(-n) %>% 
   # remove species with only one treatment
-  filter(!species %in% c("Agr.spp", "Ale.pau", "Art.fla", "Bro.sin", "Cal.lah", "Cal.sca", "Cli.pol", "Eup.L", "Ger.pyl", "Hyp.wig", "Jun.leu", "Kob.cer", "Lom.car", "Luzula", "Ran.tan", "Swe.mac", "Ver.sze"))
+  inner_join(sp.list, by = c("species" = "Var1"))
+  
+
 
   
 
