@@ -153,11 +153,8 @@ pheno.long <- pheno.long %>%
 ########################################################################
 
 
-# merge site, block and treatment
-pheno.long[,(ncol(pheno.long)+1):(ncol(pheno.long)+4)] <- pheno.dat[match(pheno.long$turfID,pheno.dat$turfID),c("origSite", "destSite", "block", "treatment")]
-
 #### CLEAN VARIABLES ####
-pheno.long <- pheno.long %>%
+phenology <- pheno.long %>%
   # order sites
   mutate(destSite = factor(destSite, levels =c("H", "A", "M"))) %>% 
   mutate(origSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
@@ -167,14 +164,15 @@ pheno.long <- pheno.long %>%
   mutate(newTT = plyr::mapvalues(newTT, c("OTC", "C", "1", "2"), c("OTC", "Control", "Warm", "Cold"))) %>% 
   mutate(newTT = factor(newTT, levels=c("Control", "OTC", "Warm", "Cold", "Local"))) %>% 
   mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("b", "f", "s", "r"), c("Bud", "Flower", "Seed", "Ripe"))) %>% 
-  mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe")))
+  mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe"))) %>% 
+  mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy"))
   #mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("b", "f", "s", "r", "bf", "fs", "sr"), c("Bud", "Flower", "Seed", "Ripe", "BudFlower", "FlowerSeed", "SeedRipe"))) %>% 
   #mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe", "BudFlower", "FlowerSeed", "SeedRipe")))
 
 
 ### NEEDS TO BE FIXED!!!
 # Left_join trait data
-pheno.long <- pheno.long %>% left_join(NewTrait, by = c("species" = "sp"))
+phenology <- phenology %>% left_join(NewTrait, by = c("species" = "sp"))
 # check species
 setdiff(pheno.long$species, NewTrait$sp)
 setdiff(NewTrait$sp, pheno.long$species)
@@ -183,6 +181,6 @@ setdiff(NewTrait$sp, pheno.long$species)
 
 
 # Save pheno.long
-save(pheno.long, file = "PhenoLong.RData")
+save(phenology, file = "Phenology.RData")
 
 
