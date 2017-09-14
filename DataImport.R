@@ -23,7 +23,8 @@ pheno.dat <- pheno.dat %>% filter(turfID != "")
 
 #### META DATA ####
 meta.pheno <- pheno.dat %>% 
-  distinct(turfID, origSite, destSite, block, treatment)
+  distinct(turfID, origSite, destSite, block, treatment) %>% 
+  mutate(newTT = plyr::mapvalues(treatment, c("1", "2", "C", "O", "OTC"), c("1", "2", "C", "C", "OTC")))
 
 
 ## DATA CORRECTIONS ##
@@ -91,13 +92,6 @@ dev.off()
 # **************************************************
 
 
-# Remove species
-pheno <- pheno %>% 
-  # remove species only on one or two turfs
-  filter(!species %in% c("Saxifrage", "Ari.par", "Ast.ast", "Fra.spp", "Sal.sou", "Sib.pro", "Sag.jap", "Ane.dem", "Kob.sp.small", "Car"))
-  
-
-
 #### CALCULATE FIRST, PEAK, END AND DURATION ####
 ### MAKE LONG DATA SET ###
 pheno.long <- pheno %>%
@@ -117,21 +111,34 @@ pheno.long <- pheno %>%
   mutate(duration = end - (first-1)) %>% # calculate duration
   gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) %>%  # create pheno.var and gather 4 variable into 1 column
   mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration")))
-head(pheno.long)
+
 
 ## List of species with more than 3 occurrences per species, site, treatment and pheno.var
-sp.list <- pheno.long %>% 
+ThreeOccurences <- pheno.long %>% 
   filter(pheno.var == "first") %>% 
   group_by(species, turfID, pheno.stage) %>% 
   summarise(n = n()) %>%
-  mutate(new.var = turfID) %>% 
-  mutate(originSite = substr(turfID, 1, 1)) %>% 
-  separate(col = new.var, into = c("block", "treatment"), sep = "-") %>% 
-  group_by(species, pheno.stage, treatment, originSite) %>% 
+  left_join(meta.pheno, by = "turfID") %>% 
+  group_by(species, pheno.stage, newTT, origSite) %>% # keep O and C together
   summarize(n = n()) %>% 
   filter(n > 2)
 
+# check cases
+#table(pheno.long$species, pheno.long$treatment)
 
+# Reduce nr. species 
+pheno.long <- pheno.long %>% 
+  left_join(meta.pheno, by = c("turfID")) %>% 
+  inner_join(ThreeOccurences, by = c("species", "pheno.stage", "newTT", "origSite")) %>% 
+  select(-n) %>% 
+  # remove species with only one treatment
+  filter(!species %in% c("Agr.spp", "Ale.pau", "Art.fla", "Bro.sin", "Cal.lah", "Cal.sca", "Cli.pol", "Eup.L", "Ger.pyl", "Hyp.wig", "Jun.leu", "Kob.cer", "Lom.car", "Luzula", "Ran.tan", "Swe.mac", "Ver.sze"))
+
+  
+
+
+########################################################################
+# Use this later!!!!
 #### CALCULATE DAYS BETWEEN FIRST BUD AND FLOWER, FLOWER AND SEED ETC (PHENO.STAGES IN DAYS) ####
 pheno.long <- pheno.long %>% 
   spread(key = pheno.stage, value = value) %>% 
@@ -142,6 +149,8 @@ pheno.long <- pheno.long %>%
                              ifelse(pheno.var == "peak" & pheno.stage %in% c("bf", "fs", "sr"), "days", "doy"))) %>%
            filter(!is.na(value)) %>%  # remove empty rows
   mutate(value = ifelse(value < 0, NA, value)) # make negative values NA
+
+########################################################################
 
 
 # merge site, block and treatment
