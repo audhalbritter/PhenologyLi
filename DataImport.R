@@ -97,18 +97,6 @@ pheno <- pheno %>%
   filter(!species %in% c("Saxifrage", "Ari.par", "Ast.ast", "Fra.spp", "Sal.sou", "Sib.pro", "Sag.jap", "Ane.dem", "Kob.sp.small", "Car"))
   
 
-# Find species with > 2 observation per origSite, treatment and pheno.stage
-pheno %>%
-  select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
-  gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% # make variable pheno.stage
-  filter(value > 0, species == "Agr.spp", pheno.stage == "nr.s") %>%
-  group_by(origSite, block, treatment) %>% 
-  summarise(n = n()) %>% 
-  mutate(n2 = 1) %>% 
-  group_by(species, origSite, treatment, pheno.stage) %>% 
-  summarise(sum(n2))
-
-
 
 #### CALCULATE FIRST, PEAK, END AND DURATION ####
 ### MAKE LONG DATA SET ###
