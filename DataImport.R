@@ -112,39 +112,12 @@ pheno.long <- pheno %>%
   mutate(pheno.stage = substring(pheno.stage, nchar(pheno.stage), nchar(pheno.stage))) %>%  # take last letter from pheno.stage
   mutate(duration = end - (first-1)) %>% # calculate duration
   gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) %>%  # create pheno.var and gather 4 variable into 1 column
-  mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration"))) %>% 
+  mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration"))) %>%
   left_join(meta.pheno, by = c("turfID"))
 
 
 #### CLEAN DATA ####
-## List of species with more than 3 occurrences per species, site, treatment and pheno.var
-ThreeOccurences <- pheno.long %>% 
-  filter(pheno.var == "first") %>% 
-  group_by(species, turfID, pheno.stage) %>% 
-  summarise(n = n()) %>%
-  left_join(meta.pheno, by = "turfID") %>% 
-  group_by(species, pheno.stage, newTT, origSite) %>% # keep O and C together
-  summarize(n = n()) %>% 
-  filter(n > 2)
 
-# Select species that occur in at least 2 treatments
-NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT))
-sp.list <- NrTreat %>% 
-  filter(Freq > 0) %>% 
-  group_by(Var1) %>% 
-  summarise(n = n()) %>% 
-  filter(n > 1) %>%
-  # remove sp with c and treat not at same site
-  filter(!Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
-  select(-n)
-
-# Reduce nr. species 
-pheno.long <- pheno.long %>% 
-  inner_join(ThreeOccurences, by = c("species", "pheno.stage", "newTT", "origSite")) %>% 
-  select(-n) %>% 
-  # remove species with only one treatment
-  inner_join(sp.list, by = c("species" = "Var1"))
-  
 # Replace impossible values
 # Replace "first" if: b > f, f > s, s > r, b == s, f == r, b == r
 # to test use:
@@ -161,7 +134,41 @@ pheno.long <- pheno.long %>%
   gather(key = pheno.stage, value = value, -turfID, -species, -pheno.var, -origSite, -destSite, -block, -treatment, -newTT) %>% 
   spread(key = pheno.var, value = value) %>% 
   mutate(duration = ifelse(is.na(first), NA, duration)) %>%  # replace duration with NA if first is NA
-  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage, -origSite, -destSite, -block, -treatment, -newTT)
+  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage, -origSite, -destSite, -block, -treatment, -newTT) %>% 
+  filter(!is.na(value))
+
+
+## List of species with more than 3 occurrences per species, site, treatment and pheno.var
+ThreeOccurences <- pheno.long %>% 
+  filter(pheno.var == "first") %>% 
+  group_by(species, turfID, pheno.stage) %>% 
+  summarise(n = n()) %>%
+  left_join(meta.pheno, by = "turfID") %>% 
+  group_by(species, pheno.stage, newTT, origSite) %>% # keep O and C together
+  summarize(n = n()) %>% 
+  filter(n > 2)
+
+# Reduce nr. species 
+pheno.long <- pheno.long %>% 
+  inner_join(ThreeOccurences, by = c("species", "pheno.stage", "newTT", "origSite")) %>% 
+  select(-n)
+
+# Select species that occur in at least 2 treatments
+NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT))
+sp.list <- NrTreat %>% 
+  filter(Freq > 0) %>% 
+  group_by(Var1) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 1) %>%
+  # remove sp with c and treat not at same site
+  filter(!Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
+  select(-n)
+
+# Reduce nr. species 
+pheno.long <- pheno.long %>% 
+  # remove species with only one treatment
+  inner_join(sp.list, by = c("species" = "Var1"))
+  
 
 
 
@@ -181,14 +188,13 @@ phenology <- pheno.long %>%
   mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy"))
 
 
+
 ### NEEDS TO BE FIXED!!!
 # Left_join trait data
 phenology <- phenology %>% left_join(NewTrait, by = c("species" = "sp"))
 # check species
 setdiff(pheno.long$species, NewTrait$sp)
 setdiff(NewTrait$sp, pheno.long$species)
-# These species never flowered, so not in pheno.long
-#[1] "Ana.fla" "Oxy.gla" "Cer.sze" "Cya.inf" "Gal.spa" "Hal.ell" "Hed.alg" "Pol.run" "Pri.ame" "Pru.vul" "Rho.yun" "Tri.rep" "Vio.sze"
 
 
 # Save pheno.long
