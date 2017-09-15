@@ -87,10 +87,7 @@ SpeciesMeanSE <- function(dat, phenovar){
     unite(Transplant, Transplant_mean, Transplant_se, sep = "_") %>% 
     gather(key = Treatment, value = united, -origSite, -pheno.stage, -species) %>%
     separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
-    filter(!is.na(mean)) %>%
-    mutate(newname = paste(origSite, Treatment, sep = "_")) %>% # paste Treatment and site, they are unique and can be renamed
-    mutate(newname = plyr::mapvalues(newname, c("H_OTC", "A_OTC", "H_Transplant", "A_Transplant"), c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
-    mutate(newname = factor(newname, levels = c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant")))
+    filter(!is.na(mean))
 
   return(SpeciesDifference)
 }    
@@ -98,6 +95,9 @@ SpeciesMeanSE <- function(dat, phenovar){
 ### COMMUNITY DATA ###
 PlotCommunityData <- function(dat, phenovar){    
     CommunityDifference <- dat %>% 
+      mutate(newname = paste(origSite, Treatment, sep = "_")) %>% # paste Treatment and site, they are unique and can be renamed
+      mutate(newname = plyr::mapvalues(newname, c("H_OTC", "A_OTC", "H_Transplant", "A_Transplant"), c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
+      mutate(newname = factor(newname, levels = c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
       group_by(pheno.stage, newname) %>% 
       summarise(Difference = mean(mean, na.rm = TRUE), SE = mean(se, na.rm = TRUE)) %>% 
       mutate(Treatment = sub(".* ", "", newname))
