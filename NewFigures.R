@@ -40,7 +40,7 @@ MeanData <- MeanSE %>%
   group_by(origSite, pheno.stage, Treatment, newname) %>% 
   summarise(Difference = mean(Difference, na.rm = TRUE), SE = mean(SE, na.rm = TRUE))
 
-DifferencePlot <- ggplot(MeanData, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
+DurationPlot <- ggplot(MeanData, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
   geom_hline(yintercept=0, color = "gray") +
   geom_point(size = 1.8) +
   labs(x = "", y = "Treatment - control in days") +
@@ -48,11 +48,28 @@ DifferencePlot <- ggplot(MeanData, aes(x = newname, y = Difference, color = Trea
   scale_shape_manual(name = "", values = c(16, 17)) +
   facet_grid(~ pheno.stage) +
   geom_errorbar(width=0.2) +
+  scale_x_discrete(labels = c("High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine")) +
+  ggtitle("Peak of phenological stage") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+save_plot("DurationPlot_Doy.jpeg", DurationPlot, base_aspect_ratio = 1.8)
+
+
+DurationPlot <- ggplot(MeanData, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
+  geom_hline(yintercept=0, color = "gray") +
+  geom_point(size = 1.8) +
+  labs(x = "", y = "Treatment - control in days") +
+  scale_colour_manual(name = "", values = c("red", "purple")) +
+  scale_shape_manual(name = "", values = c(16, 17)) +
+  facet_grid(~ pheno.stage) +
+  geom_errorbar(width=0.2) +
+  scale_x_discrete(labels = c("High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Warm" = "High alpine", "Alpine Warm" = "Alpine")) +
   ggtitle("Peak of phenological stage") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 print(DifferencePlot)
 save_plot("DifferencePlot_Doy.jpeg", DifferencePlot,base_aspect_ratio = 1.8)
+
 
 pheno.long %>% 
   filter(pheno.stage == "Flower", pheno.var == "peak", newtreat %in% c("Control", "OTC"), origSite == "A") %>% 
