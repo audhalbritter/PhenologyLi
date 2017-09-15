@@ -1,5 +1,5 @@
 # PhenoFunctions 
-#### READ IN PHENOLOGY DATA 2015 ####
+#### READ IN PHENOLOGY DATA 2016 ####
 ReadInBodyPhenology <- function(datasheet, site){
   # import body of data
   dat <- read.csv(datasheet, header=FALSE, sep=";", skip=3, stringsAsFactors=FALSE)
@@ -60,11 +60,64 @@ CalcSums <- function(dat){
 }
 
 
+#### FUNCTIONS FOR FIGURES ####
+
+### COMMUNITY DATA ###
+#, phenovar
+PlotCommunityData <- function(dat, phenovar){
+  # Calculate mean and se by species, pheno.stage, origSite, newTT
+  MeanSE <- dat %>% 
+    filter(pheno.var == phenovar) %>% 
+    group_by(newTT, origSite, pheno.stage, species) %>% 
+    summarise(N = sum(!is.na(value)), mean = mean(value, na.rm = TRUE), se = sd(value, na.rm = TRUE)/sqrt(N))
+  
+  # Calculate mean for difference between Control and Treatment
+  #SPOnlyInOneTreatment
+  Difference <- MeanSE %>% 
+    ungroup() %>% 
+    select(-N) %>%  # remove site, because it causes problems
+    unite(united, mean, se, sep = "_") %>% # unite mean and se
+    spread(key = newTT, value = united) %>% # spread Treatments
+    separate(col = Control, into = c("Control_mean", "Control_se"), sep = "_", convert = TRUE) %>% 
+    separate(col = OTC, into = c("OTC_mean", "OTC_se"), sep = "_", convert = TRUE) %>% 
+    separate(col = Warm, into = c("Transplant_mean", "Transplant_se"), sep = "_", convert = TRUE) %>% 
+    mutate(OTC_mean = OTC_mean - Control_mean, Transplant_mean = Transplant_mean - Control_mean) %>% 
+    mutate(OTC_se = sqrt(Control_se^2 + OTC_se^2), Transplant_se = sqrt(Control_se^2 + Transplant_se^2)) %>% 
+    select(-Control_mean, -Control_se) %>% 
+    unite(OTC, OTC_mean, OTC_se, sep = "_") %>% 
+    unite(Transplant, Transplant_mean, Transplant_se, sep = "_") %>% 
+    gather(key = Treatment, value = united, -origSite, -pheno.stage, -species) %>%
+    separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
+    filter(!is.na(mean)) %>%
+    mutate(newname = paste(origSite, Treatment, sep = "_")) %>% # paste Treatment and site, they are unique and can be renamed
+    mutate(newname = plyr::mapvalues(newname, c("H_OTC", "A_OTC", "H_Transplant", "A_Transplant"), c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
+    mutate(newname = factor(newname, levels = c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
+    group_by(pheno.stage, newname) %>% 
+    summarise(Difference = mean(mean, na.rm = TRUE), SE = mean(se, na.rm = TRUE)) %>% 
+    mutate(Treatment = sub(".* ", "", newname))
+  
+  ggplot(Difference, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
+    geom_hline(yintercept=0, color = "gray") +
+    geom_point(size = 1.8) +
+    labs(x = "", y = "Treatment - control in days") +
+    scale_colour_manual(name = "", values = c("red", "purple")) +
+    scale_shape_manual(name = "", values = c(16, 17)) +
+    facet_grid(~ pheno.stage) +
+    geom_errorbar(width=0.2) +
+    scale_x_discrete(labels = c("High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine")) +
+    ggtitle(phenovar) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  
+}
+
+
+
+
 #### FUNCTIONS FOR ANALYSIS ####
 #### Function to produce model-checking plots for the fixed effects of an lmer model
 ModelCheck <- function(mod){		
-  par(mfrow = c(2,2))
-  # Residual plot: checking homogeneity of the variance
+  par(mfrow = c(1,2))
+  # Residual plot: checking homogeneity of the variance and linerarity
   plot(fitted(mod), resid(mod)) #should have no pattern
   abline(h=0)
   # QQnorm plot: normal distribution of the residuals
