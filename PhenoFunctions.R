@@ -92,6 +92,7 @@ SpeciesMeanSE <- function(dat, phenovar){
   return(SpeciesDifference)
 }    
     
+
 ### COMMUNITY DATA ###
 PlotCommunityData <- function(dat, phenovar){    
     CommunityDifference <- dat %>% 
@@ -115,8 +116,22 @@ PlotCommunityData <- function(dat, phenovar){
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 }
 
-### SPECIES DATA ###
 
+### SPECIES DATA ###
+PlotSpeciesData <- function(dat, phenovar){
+  dat2 <- expand.grid(Treatment=unique(dat$Treatment), species=unique(dat$species), origSite = unique(dat$origSite), pheno.stage = unique(dat$pheno.stage)) %>% data.frame %>% left_join(dat)
+  
+  # Draw plot
+  dat2 %>% 
+    mutate(origSite = plyr::mapvalues(origSite, c("H", "A"), c("High Alpine", "Alpine"))) %>% 
+    ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
+    geom_bar(position="dodge", stat="identity") +
+    geom_errorbar(position = position_dodge(0.9), width = 0.2) +
+    scale_fill_manual(name = "", values = c("red", "purple")) +
+    labs(y = "Treatment - Control in days", x = "", title = phenovar) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    facet_grid(pheno.stage ~ origSite)
+}
 
 
 #### FUNCTIONS FOR ANALYSIS ####
