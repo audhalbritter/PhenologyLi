@@ -62,9 +62,8 @@ CalcSums <- function(dat){
 
 #### FUNCTIONS FOR FIGURES ####
 
-### COMMUNITY DATA ###
-#, phenovar
-PlotCommunityData <- function(dat, phenovar){
+### GET MEAN AND SE BY SPECIES ###
+SpeciesMeanSE <- function(dat, phenovar){
   # Calculate mean and se by species, pheno.stage, origSite, newTT
   MeanSE <- dat %>% 
     filter(pheno.var == phenovar) %>% 
@@ -73,7 +72,7 @@ PlotCommunityData <- function(dat, phenovar){
   
   # Calculate mean for difference between Control and Treatment
   #SPOnlyInOneTreatment
-  Difference <- MeanSE %>% 
+  SpeciesDifference <- MeanSE %>% 
     ungroup() %>% 
     select(-N) %>%  # remove site, because it causes problems
     unite(united, mean, se, sep = "_") %>% # unite mean and se
@@ -91,12 +90,19 @@ PlotCommunityData <- function(dat, phenovar){
     filter(!is.na(mean)) %>%
     mutate(newname = paste(origSite, Treatment, sep = "_")) %>% # paste Treatment and site, they are unique and can be renamed
     mutate(newname = plyr::mapvalues(newname, c("H_OTC", "A_OTC", "H_Transplant", "A_Transplant"), c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
-    mutate(newname = factor(newname, levels = c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant"))) %>% 
-    group_by(pheno.stage, newname) %>% 
-    summarise(Difference = mean(mean, na.rm = TRUE), SE = mean(se, na.rm = TRUE)) %>% 
-    mutate(Treatment = sub(".* ", "", newname))
+    mutate(newname = factor(newname, levels = c("High alpine OTC", "Alpine OTC", "High alpine Transplant", "Alpine Transplant")))
+
+  return(SpeciesDifference)
+}    
+    
+### COMMUNITY DATA ###
+PlotCommunityData <- function(dat, phenovar){    
+    CommunityDifference <- dat %>% 
+      group_by(pheno.stage, newname) %>% 
+      summarise(Difference = mean(mean, na.rm = TRUE), SE = mean(se, na.rm = TRUE)) %>% 
+      mutate(Treatment = sub(".* ", "", newname))
   
-  ggplot(Difference, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
+  ggplot(CommunityDifference, aes(x = newname, y = Difference, color = Treatment, shape = Treatment, ymax = Difference + SE, ymin = Difference - SE)) +
     geom_hline(yintercept=0, color = "gray") +
     geom_point(size = 1.8) +
     labs(x = "", y = "Treatment - control in days") +
@@ -107,9 +113,9 @@ PlotCommunityData <- function(dat, phenovar){
     scale_x_discrete(labels = c("High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine", "High alpine OTC" = "High alpine", "Alpine OTC" = "Alpine", "High alpine Transplant" = "High alpine", "Alpine Transplant" = "Alpine")) +
     ggtitle(phenovar) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  
 }
 
+### SPECIES DATA ###
 
 
 
