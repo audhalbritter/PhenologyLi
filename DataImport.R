@@ -164,29 +164,12 @@ phenology <- pheno.long %>%
 
 ### NEEDS TO BE FIXED!!!
 # Left_join trait data
-phenology <- phenology %>% left_join(NewTrait, by = c("species" = "sp"))
+#phenology <- phenology %>% left_join(NewTrait, by = c("species" = "sp"))
 # check species
-setdiff(pheno.long$species, NewTrait$sp)
-setdiff(NewTrait$sp, pheno.long$species)
+#setdiff(pheno.long$species, NewTrait$sp)
+#setdiff(NewTrait$sp, pheno.long$species)
 
 
 # Save pheno.long
-save(phenology, file = "Phenology.RData")
+#save(phenology, file = "Phenology.RData")
 
-
-
-
-########################################################################
-# Maybe do not do this, data is not detailed enough to calc this !!!!
-#### CALCULATE DAYS BETWEEN FIRST BUD AND FLOWER, FLOWER AND SEED ETC (PHENO.STAGES IN DAYS) ####
-pheno.long <- pheno.long %>% 
-  spread(key = pheno.stage, value = value) %>% 
-  # calculate difference in days between peak bud-flower and flower-seed
-  mutate(bf = ifelse(pheno.var == "peak", f-(b-1), NA), fs = ifelse(pheno.var == "peak", s-(f-1), NA), sr = ifelse(pheno.var == "peak", r-(s-1), NA)) %>%
-  gather(key = pheno.stage, value = value, b, f, s, r, bf, fs, sr) %>%
-  mutate(pheno.unit = ifelse(pheno.var == "duration", "days",
-                             ifelse(pheno.var == "peak" & pheno.stage %in% c("bf", "fs", "sr"), "days", "doy"))) %>%
-  filter(!is.na(value)) %>%  # remove empty rows
-  mutate(value = ifelse(value < 0, NA, value)) # make negative values NA
-
-########################################################################
