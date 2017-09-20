@@ -1,6 +1,6 @@
 # PhenoFunctions 
 #### READ IN PHENOLOGY DATA 2016 ####
-ReadInBodyPhenology <- function(datasheet, site){
+ReadInBodyPhenology <- function(datasheet, site, year){
   # import body of data
   dat <- read.csv(datasheet, header=FALSE, sep=";", skip=3, stringsAsFactors=FALSE)
   dat <- dat[dat$V2!="",] # get rid of empty lines, where no species
@@ -41,6 +41,7 @@ ReadInBodyPhenology <- function(datasheet, site){
   dat.long <- cbind(dat.long[,c(1:2,19:24)],sapply(dat.long[,c(3:18)],as.numeric))
   #sapply(dat.long[,c(4:7,9:12,14:17,19:22)],function(x)print(grep("\\D", x = x, value = TRUE))) # Check error messages
   dat.long <- dat.long[-1,]
+  dat.long$year <- year
   dat.long
   return(dat.long)
 }
