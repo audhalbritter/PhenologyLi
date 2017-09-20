@@ -1,7 +1,5 @@
 # IMPORT DATA
 
-pn <- . %>% print(n = Inf)
-
 #### LIBRARIES ####
 library("lme4")
 library("tidyverse")
@@ -9,22 +7,32 @@ library("lubridate")
 library("ggplot2")
 library("readxl")
 
+pn <- . %>% print(n = Inf)
+source(file = "PhenoFunctions.R")
 load(file = "taxa.RData")
 
 
 #### IMPORT DATA ####
-dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H")
-dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A")
-dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M")
-pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),])
+#### 2016
+dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H", "2016")
+dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A", "2016")
+dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M", "2016")
+
+#### 2017
+dat4 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "H", "2017")
+dat5 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "A", "2017")
+dat6 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "M", "2017")
+
+# RBIND TABLES
+pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),], dat4[-nrow(dat4),], dat5[-nrow(dat5),], dat6[-nrow(dat6),])
 pheno.dat <- pheno.dat %>% filter(turfID != "")
 #head(pheno.dat)
-#str(pheno.dat) 
+#str(pheno.dat)
 
 
 #### CREATE META DATA ####
 meta.pheno <- pheno.dat %>% 
-  distinct(turfID, origSite, destSite, block, treatment) %>% 
+  distinct(turfID, origSite, destSite, block, treatment, year) %>% 
   mutate(newTT = plyr::mapvalues(treatment, c("1", "2", "C", "O", "OTC"), c("1", "2", "C", "C", "OTC")))
 
 
@@ -38,12 +46,40 @@ pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Agr.ner","Agr.sp")) %>% 
   mutate(species=replace(species,species=="Jun.all","Jun.leu")) %>% 
   mutate(species=replace(species,species=="Gal.spa","Gal.hof")) %>% 
-  mutate(species=replace(species,species=="Voi.sze","Vio.sze"))
+  mutate(species=replace(species,species=="Voi.sze","Vio.sze")) %>% 
+  mutate(species=replace(species,species=="Kobresiapygmaea","Kob.sp.sigan")) %>% 
+  mutate(species=replace(species,species=="P.macrophyllum","Pol.mac")) %>% 
+  mutate(species=replace(species,species=="Festucaovina","Fes.ovi")) %>% 
+  mutate(species=replace(species,species=="Kobresia.s","Kob.spp")) %>% 
+  mutate(species=replace(species,species=="Kobresiacercostachys","Kob.cer")) %>% 
+  mutate(species=replace(species,species=="Alliumprattii","All.pra")) %>% 
+  mutate(species=replace(species,species=="carex","Car.spp")) %>% 
+  mutate(species=replace(species,species=="Primulaamethystina","Pri.ame")) %>% 
+  mutate(species=replace(species,species=="CarexA","Car.A")) %>% 
+  mutate(species=replace(species,species=="Aletrispauciflora","Ale.pau")) %>% 
+  mutate(species=replace(species,species=="Violabifloravar.rockiana","Vio.bif")) %>% 
+  mutate(species=replace(species,species=="Kobresia.sigan","Kob.sp.sigan")) %>% 
+  mutate(species=replace(species,species=="Carexmiddle","Car.sp.middle")) %>% 
+  mutate(species=replace(species,species=="Androsaceminor","And.min")) %>% 
+  mutate(species=replace(species,species=="Potentillastenophylla","Pot.ste")) %>% 
+  mutate(species=replace(species,species=="Tanacetumtatsienense","Tan.tat")) %>% 
+  mutate(species=replace(species,species=="Galearisspathulata","Gal.spa")) %>% 
+  mutate(species=replace(species,species=="Parnassiacacuminum","Par.cac")) %>% 
+  mutate(species=replace(species,species=="Kobresia.small","Kob.sp.small")) %>% 
+  mutate(species=replace(species,species=="Salixsouliei","Sal.sou")) %>% 
+  mutate(species=replace(species,species=="Oxytropisyunnanensis","Oxy.yun")) %>% 
+  mutate(species=replace(species,species=="Asterasteroides","Ast.ast")) %>% 
+  mutate(species=replace(species,species=="Festuca.big","Fes.big")) %>% 
+  mutate(species=replace(species,species=="Juncusleucomelas","Jun.leu")) %>% 
+  mutate(species=replace(species,species=="Primulawalshii","Pri.wal")) %>% 
+  mutate(species=replace(species,species=="Sibbaldiapentaphylla","Sib.pen")) %>% 
+  mutate(species=replace(species,species=="Juncus","Jun.spp")) %>% 
+  mutate(species=replace(species,species=="Festuca","Fes.spp"))
 
 # Change names to match community and trait data
 pheno.dat <- pheno.dat %>% 
-  #mutate(species = replace(species, species %in% c("Car.sp.black", "Car.sp.black.big", "Car.sp.middle", "Car.sp.yellow", "Car.L"), "Car.spp")) %>% 
-  #mutate(species = replace(species, species %in% c("Kob.sp.small", "Kob.sp.sigan", "Kob.sp.yellow"), "Kob.spp")) %>% 
+  #mutate(species = replace(species, species %in% c("Car.sp.black", "Car.sp.yellow"), "Car.spp")) %>% 
+  #mutate(species = replace(species, species %in% c("Kob.sp.small", "Kob.sp.sigan"), "Kob.spp")) %>% 
   mutate(species = replace(species, species %in% c("Fes.sp.big", "Fes.sp.small"), "Fes.spp")) %>% 
   mutate(species = replace(species, species %in% c("Luz.mul"), "Luzula")) %>% 
   mutate(species = replace(species, species %in% c("Gen.sp", "Gen.sp.white"), "Gen.spp")) %>%
