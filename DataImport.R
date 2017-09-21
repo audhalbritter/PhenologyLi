@@ -106,9 +106,9 @@ pheno <- CalcSums(pheno.dat)
 #### CALCULATE FIRST, PEAK, END AND DURATION ####
 ## MAKE LONG DATA SET ##
 pheno.long <- pheno %>%
-  select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
-  gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% # make variable pheno.stage
-  group_by(turfID, species, pheno.stage) %>%  # group by turfID, species and phenological stage to calculate first, end etc for each stage
+  select(turfID, species, date, year, doy, origSite, destSite, block, treatment, bud, flower, seed, ripe) %>%
+  gather(key = pheno.stage, value = value, bud, flower, seed, ripe) %>% # make variable pheno.stage
+  group_by(year, turfID, species, pheno.stage) %>%  # group by turfID, species and phenological stage to calculate first, end etc for each stage
   mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
   group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
   filter(value > 0) %>%
@@ -116,13 +116,12 @@ pheno.long <- pheno %>%
   filter(first > minDoy) %>% # remove if plant is flowering in the first week
   ungroup() %>% 
   select(-minDoy) %>% # remove this variable
-  #mutate_each(funs(as.numeric), first, peak, end) %>% # make variables numeric (probably not necessary)
   # make the data nice, rename variables and order them
-  mutate(pheno.stage = substring(pheno.stage, nchar(pheno.stage), nchar(pheno.stage))) %>%  # take last letter from pheno.stage
+  #mutate(pheno.stage = substring(pheno.stage, nchar(pheno.stage), nchar(pheno.stage))) %>%  # take last letter from pheno.stage
   mutate(duration = end - (first-1)) %>% # calculate duration
-  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage) %>%  # create pheno.var and gather 4 variable into 1 column
+  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage, -year) %>%  # create pheno.var and gather 4 variable into 1 column
   mutate(pheno.var = factor(pheno.var, levels = c("first", "peak", "end", "duration"))) %>%
-  left_join(meta.pheno, by = c("turfID"))
+  left_join(meta.pheno, by = c("turfID", "year"))
 
 
 #### CLEAN DATA ####
@@ -132,58 +131,57 @@ pheno.long <- pheno %>%
 # to test use:
 # filter(pheno.var == "end", b > f) %>% arrange(species, turfID) %>% pn
 pheno.long <- pheno.long %>% 
-  mutate(pheno.stage = factor(pheno.stage, levels = c("b", "f", "s", "r"))) %>% 
+  mutate(pheno.stage = factor(pheno.stage, levels = c("bud", "flower", "seed", "ripe"))) %>% 
   spread(key = pheno.stage, value = value) %>% 
-  mutate(b = ifelse(pheno.var == "first" & b > f, NA, b)) %>% # b = NA
-  mutate(f = ifelse(pheno.var == "first" & f > s & !species %in% c("Pol.viv", "Pol.mac"), NA, f)) %>% # f = NA
-  mutate(r = ifelse(pheno.var == "first" & s > r, NA, r)) %>% # r = NA
-  mutate(b = ifelse(pheno.var == "first" & b == s, NA, b)) %>% # b = NA
+  mutate(bud = ifelse(pheno.var == "first" & bud > flower, NA, bud)) %>% # bud = NA
+  mutate(flower = ifelse(pheno.var == "first" & flower > seed & !species %in% c("Pol.viv", "Pol.mac"), NA, flower)) %>% # flower = NA
+  mutate(ripe = ifelse(pheno.var == "first" & seed > ripe, NA, ripe)) %>% # ripe = NA
+  mutate(bud = ifelse(pheno.var == "first" & bud == seed, NA, bud)) %>% # bud = NA
   filter(!(species == "Car.sp.yellow" & turfID == "A6-O")) %>%  # remove this turf
-  mutate(r = ifelse(species %in% c("Pol.viv", "Pol.mac"), NA, r)) %>% # remove ripe seeds for Polygonum, does not make sense, difficult to see when bulbils are ripe
-  gather(key = pheno.stage, value = value, -turfID, -species, -pheno.var, -origSite, -destSite, -block, -treatment, -newTT) %>% 
+  mutate(ripe = ifelse(species %in% c("Pol.viv", "Pol.mac"), NA, ripe)) %>% # remove ripe seeds for Polygonum, does not make sense, difficult to see when bulbils are ripe
+  gather(key = pheno.stage, value = value, -year, -turfID, -species, -pheno.var, -origSite, -destSite, -block, -treatment, -newTT) %>% 
   spread(key = pheno.var, value = value) %>% 
   mutate(duration = ifelse(is.na(first), NA, duration)) %>%  # replace duration with NA if first is NA
-  gather(key = pheno.var, value = value, -turfID, -species, -pheno.stage, -origSite, -destSite, -block, -treatment, -newTT) %>% 
+  gather(key = pheno.var, value = value, -year, -turfID, -species, -pheno.stage, -origSite, -destSite, -block, -treatment, -newTT) %>% 
   filter(!is.na(value))
 
 
 ## List of species with more than 3 occurrences per species, site, treatment and pheno.var
 ThreeOccurences <- pheno.long %>% 
   filter(pheno.var == "first") %>% 
-  group_by(species, turfID, pheno.stage) %>% 
+  group_by(species, year, turfID, pheno.stage) %>% 
   summarise(n = n()) %>%
-  left_join(meta.pheno, by = "turfID") %>% 
-  group_by(species, pheno.stage, newTT, origSite) %>% # keep O and C together
+  left_join(meta.pheno, by = c("turfID", "year")) %>% 
+  group_by(species, year, pheno.stage, newTT, origSite) %>% # keep O and C together
   summarize(n = n()) %>% 
   filter(n > 2)
 
 # Reduce nr. species 
 pheno.long <- pheno.long %>% 
-  inner_join(ThreeOccurences, by = c("species", "pheno.stage", "newTT", "origSite")) %>% 
+  inner_join(ThreeOccurences, by = c("species", "year", "pheno.stage", "newTT", "origSite")) %>% 
   select(-n)
 
 # Select species that occur in at least 2 treatments
-NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT))
+NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT, pheno.long$year))
 sp.list <- NrTreat %>% 
   filter(Freq > 0) %>% 
-  group_by(Var1) %>% 
-  summarise(n = n()) %>% 
-  filter(n > 2) %>%
+  group_by(Var3, Var1) %>% 
+  summarise(n = n()) %>%
+  filter(n > 1) %>% ### !!!! SHOULD BE > 2, TO CALC MEAN FIRST DATE !!!!
   # remove sp with c and treat not at same site
-  filter(!Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
+  filter(Var3 != "2016" | !Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
   select(-n)
 
 # Reduce nr. species 
 pheno.long <- pheno.long %>% 
   # remove species with only one treatment
-  inner_join(sp.list, by = c("species" = "Var1"))
+  inner_join(sp.list, by = c("species" = "Var1", "year" = "Var3"))
   
 
 
 
 #### CLEAN VARIABLES ####
 phenology <- pheno.long %>%
-  mutate(year = 2016) %>% # add year
   # order sites
   mutate(destSite = factor(destSite, levels =c("H", "A", "M"))) %>% 
   mutate(origSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
@@ -192,7 +190,7 @@ phenology <- pheno.long %>%
   mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local"))) %>% 
   mutate(newTT = plyr::mapvalues(newTT, c("OTC", "C", "1", "2"), c("OTC", "Control", "Warm", "Cold"))) %>% 
   mutate(newTT = factor(newTT, levels=c("Control", "OTC", "Warm", "Cold"))) %>% 
-  mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("b", "f", "s", "r"), c("Bud", "Flower", "Seed", "Ripe"))) %>% 
+  mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("bud", "flower", "seed", "ripe"), c("Bud", "Flower", "Seed", "Ripe"))) %>% 
   mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe"))) %>% 
   mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy"))
 
