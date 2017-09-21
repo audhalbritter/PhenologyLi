@@ -49,16 +49,14 @@ ReadInBodyPhenology <- function(datasheet, site, year){
 
 # Calculate the sum of buds, flowers and seeds per turf and species
 CalcSums <- function(dat){
-  dat$nr.b <- apply(dat[,c(seq(9,21,4))],1,sum, na.rm=TRUE)
-  dat$nr.b[dat$nr.b == 0] <- NA
-  dat$nr.f <- apply(dat[,c(seq(10,22,4))],1,sum, na.rm=TRUE)
-  dat$nr.f[dat$nr.f == 0] <- NA
-  dat$nr.s <- apply(dat[,c(seq(11,23,4))],1,sum, na.rm=TRUE)
-  dat$nr.s[dat$nr.s == 0] <- NA
-  dat$nr.r <- apply(dat[,c(seq(12,24,4))],1,sum, na.rm=TRUE)
-  dat$nr.r[dat$nr.r == 0] <- NA
+  dat <- dat %>% 
+  mutate(bud = rowSums(.[grep("b\\.", names(.))], na.rm = TRUE)) %>% 
+  mutate(flower = rowSums(.[grep("f\\.", names(.))], na.rm = TRUE)) %>% 
+  mutate(seed = rowSums(.[grep("s\\.", names(.))], na.rm = TRUE)) %>% 
+  mutate(ripe = rowSums(.[grep("r\\.", names(.))], na.rm = TRUE))
   return(dat)
 }
+
 
 
 #### FUNCTIONS FOR FIGURES ####
