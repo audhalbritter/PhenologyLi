@@ -9,7 +9,7 @@ library("readxl")
 
 pn <- . %>% print(n = Inf)
 source(file = "PhenoFunctions.R")
-load(file = "taxa.RData")
+#load(file = "taxa.RData")
 
 
 #### IMPORT DATA ####
@@ -20,8 +20,8 @@ dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M", "2016")
 
 #### 2017
 dat4 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "H", "2017")
-dat5 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "A", "2017")
-dat6 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "M", "2017")
+dat5 <- ReadInBodyPhenology("Phenologydata2017_China_A.csv", "A", "2017")
+dat6 <- ReadInBodyPhenology("Phenologydata2017_China_M.csv", "M", "2017")
 
 # RBIND TABLES
 pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),], dat4[-nrow(dat4),], dat5[-nrow(dat5),], dat6[-nrow(dat6),])
@@ -46,35 +46,7 @@ pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Agr.ner","Agr.sp")) %>% 
   mutate(species=replace(species,species=="Jun.all","Jun.leu")) %>% 
   mutate(species=replace(species,species=="Gal.spa","Gal.hof")) %>% 
-  mutate(species=replace(species,species=="Voi.sze","Vio.sze")) %>% 
-  mutate(species=replace(species,species=="Kobresiapygmaea","Kob.sp.sigan")) %>% 
-  mutate(species=replace(species,species=="P.macrophyllum","Pol.mac")) %>% 
-  mutate(species=replace(species,species=="Festucaovina","Fes.ovi")) %>% 
-  mutate(species=replace(species,species=="Kobresia.s","Kob.spp")) %>% 
-  mutate(species=replace(species,species=="Kobresiacercostachys","Kob.cer")) %>% 
-  mutate(species=replace(species,species=="Alliumprattii","All.pra")) %>% 
-  mutate(species=replace(species,species=="carex","Car.spp")) %>% 
-  mutate(species=replace(species,species=="Primulaamethystina","Pri.ame")) %>% 
-  mutate(species=replace(species,species=="CarexA","Car.A")) %>% 
-  mutate(species=replace(species,species=="Aletrispauciflora","Ale.pau")) %>% 
-  mutate(species=replace(species,species=="Violabifloravar.rockiana","Vio.bif")) %>% 
-  mutate(species=replace(species,species=="Kobresia.sigan","Kob.sp.sigan")) %>% 
-  mutate(species=replace(species,species=="Carexmiddle","Car.sp.middle")) %>% 
-  mutate(species=replace(species,species=="Androsaceminor","And.min")) %>% 
-  mutate(species=replace(species,species=="Potentillastenophylla","Pot.ste")) %>% 
-  mutate(species=replace(species,species=="Tanacetumtatsienense","Tan.tat")) %>% 
-  mutate(species=replace(species,species=="Galearisspathulata","Gal.spa")) %>% 
-  mutate(species=replace(species,species=="Parnassiacacuminum","Par.cac")) %>% 
-  mutate(species=replace(species,species=="Kobresia.small","Kob.sp.small")) %>% 
-  mutate(species=replace(species,species=="Salixsouliei","Sal.sou")) %>% 
-  mutate(species=replace(species,species=="Oxytropisyunnanensis","Oxy.yun")) %>% 
-  mutate(species=replace(species,species=="Asterasteroides","Ast.ast")) %>% 
-  mutate(species=replace(species,species=="Festuca.big","Fes.big")) %>% 
-  mutate(species=replace(species,species=="Juncusleucomelas","Jun.leu")) %>% 
-  mutate(species=replace(species,species=="Primulawalshii","Pri.wal")) %>% 
-  mutate(species=replace(species,species=="Sibbaldiapentaphylla","Sib.pen")) %>% 
-  mutate(species=replace(species,species=="Juncus","Jun.spp")) %>% 
-  mutate(species=replace(species,species=="Festuca","Fes.spp"))
+  mutate(species=replace(species,species=="Voi.sze","Vio.sze"))
 
 # Change names to match community and trait data
 pheno.dat <- pheno.dat %>% 
@@ -101,6 +73,12 @@ setdiff(pheno.dat$species, taxa$species)
 ## Calculate Sums for bud, flower, seed and ripe seeds per turf
 pheno <- CalcSums(pheno.dat)
 #head(pheno)
+
+pheno %>%
+  filter(year == "2017", species == "Car.A") %>% 
+  ggplot(aes(x = doy, y = ripe)) +
+  geom_point() +
+  facet_wrap(~ turfID)
 
 
 #### CALCULATE FIRST, PEAK, END AND DURATION ####
