@@ -18,11 +18,9 @@ ReadInBodyPhenology <- function(datasheet, site, year){
   #browser()
   # merge data into long data table
   long.table <- lapply(seq(3,ncol(dat)-15,16),function(i){
-      
     x <- dat[ ,c(1:2,i:(i+15))]
     names(x) <- c("turfID", "species", paste(rep(c("b", "f", "s", "r"), 4  ), rep(1:4, each=4), sep="."))
     x$date <- strsplit(dat.h[1,i+1], "_")[[1]][1]
-
     x$doy <- yday(ymd(x$date))
     x  
   })
