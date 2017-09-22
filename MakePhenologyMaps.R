@@ -9,9 +9,22 @@ PhenologyMap <- function(df){
 }
 
 ## plot maps
-phenoMaps <- pheno %>% 
-  select(turfID, species, date, doy, origSite, destSite, block, treatment, nr.b, nr.f, nr.s, nr.r) %>%
-  gather(key = pheno.stage, value = value, nr.b, nr.f, nr.s, nr.r) %>% # make variable pheno.stage
+phenoMaps2016 <- pheno %>% 
+  filter(year == "2016") %>% 
+  select(turfID, species, date, doy, origSite, destSite, block, treatment, bud, flower, seed, ripe) %>%
+  gather(key = pheno.stage, value = value, bud, flower, seed, ripe) %>% # make variable pheno.stage
+  filter(value > 0) %>% 
+  group_by(species) %>% 
+  do(pheno.maps = PhenologyMap(.))
+
+pdf(file = "Phenologymaps2016.pdf")
+phenoMaps2016$pheno.maps
+dev.off()
+
+phenoMaps2017 <- pheno %>% 
+  filter(year == "2017") %>% 
+  select(turfID, species, date, doy, origSite, destSite, block, treatment, bud, flower, seed, ripe) %>%
+  gather(key = pheno.stage, value = value, bud, flower, seed, ripe) %>% # make variable pheno.stage
   filter(value > 0) %>% 
   group_by(species) %>% 
   do(pheno.maps = PhenologyMap(.))
@@ -19,7 +32,7 @@ phenoMaps <- pheno %>%
 ## Now open up a pdf file and write all the plots out as separate pages
 ## the output pdf will be located in the getwd() directory named 'Rplots.pdf'
 ##
-pdf(file = "Phenologymaps.pdf")
-phenoMaps$pheno.maps
+pdf(file = "Phenologymaps2017.pdf")
+phenoMaps2017$pheno.maps
 dev.off()
 # **************************************************

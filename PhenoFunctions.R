@@ -15,12 +15,14 @@ ReadInBodyPhenology <- function(datasheet, site, year){
   }
   # import head of data set
   dat.h <- read.csv(datasheet, sep=";", header=FALSE, nrow=3, stringsAsFactors=FALSE)
-  
+  #browser()
   # merge data into long data table
   long.table <- lapply(seq(3,ncol(dat)-15,16),function(i){
+      
     x <- dat[ ,c(1:2,i:(i+15))]
     names(x) <- c("turfID", "species", paste(rep(c("b", "f", "s", "r"), 4  ), rep(1:4, each=4), sep="."))
     x$date <- strsplit(dat.h[1,i+1], "_")[[1]][1]
+
     x$doy <- yday(ymd(x$date))
     x  
   })
@@ -47,6 +49,13 @@ ReadInBodyPhenology <- function(datasheet, site, year){
 }
 
 
+
+x <- x %>% 
+  mutate(date = ifelse(year == "2016", strsplit(dat.h[1,i+1], "_")[[1]][1], dat.h[1,i+2]))
+
+
+
+
 # Calculate the sum of buds, flowers and seeds per turf and species
 CalcSums <- function(dat){
   dat <- dat %>% 
@@ -66,7 +75,7 @@ SpeciesMeanSE <- function(dat, phenovar){
   # Calculate mean and se by species, pheno.stage, origSite, newTT
   MeanSE <- dat %>% 
     filter(pheno.var == phenovar) %>% 
-    group_by(newTT, origSite, pheno.stage, species) %>% 
+    group_by(year, newTT, origSite, pheno.stage, species) %>% 
     summarise(N = sum(!is.na(value)), mean = mean(value, na.rm = TRUE), se = sd(value, na.rm = TRUE)/sqrt(N))
   
   # Calculate mean for difference between Control and Treatment
@@ -84,7 +93,7 @@ SpeciesMeanSE <- function(dat, phenovar){
     select(-Control_mean, -Control_se) %>% 
     unite(OTC, OTC_mean, OTC_se, sep = "_") %>% 
     unite(Transplant, Transplant_mean, Transplant_se, sep = "_") %>% 
-    gather(key = Treatment, value = united, -origSite, -pheno.stage, -species) %>%
+    gather(key = Treatment, value = united, -year, -origSite, -pheno.stage, -species) %>%
     separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
     filter(!is.na(mean))
 
@@ -117,11 +126,12 @@ PlotCommunityData <- function(dat, phenovar){
 
 
 ### SPECIES DATA ###
-PlotSpeciesData <- function(dat, phenovar){
+PlotSpeciesData <- function(dat, phenovar, year){
   dat2 <- expand.grid(Treatment=unique(dat$Treatment), species=unique(dat$species), origSite = unique(dat$origSite), pheno.stage = unique(dat$pheno.stage)) %>% data.frame %>% left_join(dat)
   
   # Draw plot
   dat2 %>% 
+    filter(year == year) %>% 
     mutate(origSite = plyr::mapvalues(origSite, c("H", "A"), c("High Alpine", "Alpine"))) %>% 
     ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
     geom_bar(position="dodge", stat="identity") +
