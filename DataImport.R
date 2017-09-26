@@ -14,18 +14,28 @@ source(file = "PhenoFunctions.R")
 
 #### IMPORT DATA ####
 #### 2016
-dat1 <- ReadInBodyPhenology("Phenologydata2016_China_H.csv", "H", "2016")
-dat2 <- ReadInBodyPhenology("Phenologydata2016_China_A.csv", "A", "2016")
-dat3 <- ReadInBodyPhenology("Phenologydata2016_China_M.csv", "M", "2016")
+dat1 <- ReadInBodyPhenology2016("Phenologydata2016_China_H.csv", "H", "2016")
+dat2 <- ReadInBodyPhenology2016("Phenologydata2016_China_A.csv", "A", "2016")
+dat3 <- ReadInBodyPhenology2016("Phenologydata2016_China_M.csv", "M", "2016")
 
 #### 2017
-dat4 <- ReadInBodyPhenology("Phenologydata2017_China_H.csv", "H", "2017")
-dat5 <- ReadInBodyPhenology("Phenologydata2017_China_A.csv", "A", "2017")
-dat6 <- ReadInBodyPhenology("Phenologydata2017_China_M.csv", "M", "2017")
+dat4 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_H.csv", "H", "2017")
+dat5 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_A.csv", "A", "2017")
+dat6 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_M.csv", "M", "2017")
+dat7 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_L.csv", "L", "2017")
+
+#### 2017
+dat8 <- ReadInBodyPhenologyExtra("17-09-25_ExtraControls_2017_H.csv", "H", "2017")
+dat9 <- ReadInBodyPhenologyExtra("17-09-25_ExtraControls_2017_A.csv", "A", "2017")
+dat10 <- ReadInBodyPhenologyExtra("17-09-25_ExtraControls_2017_M.csv", "M", "2017")
 
 # RBIND TABLES
-pheno.dat <- rbind(dat1[-nrow(dat1),], dat2[-nrow(dat2),], dat3[-nrow(dat3),], dat4[-nrow(dat4),], dat5[-nrow(dat5),], dat6[-nrow(dat6),])
-pheno.dat <- pheno.dat %>% filter(turfID != "")
+pheno.dat <- dat1 %>% 
+  bind_rows(dat2, dat3, dat4, dat5, dat6, dat7, dat8, dat9, dat10) %>% 
+  filter(turfID != "") # remove empty rows
+
+save(pheno.dat, file = "pheno.dat.RData")
+load(file = "pheno.dat.RData")
 #head(pheno.dat)
 #str(pheno.dat)
 
@@ -33,25 +43,45 @@ pheno.dat <- pheno.dat %>% filter(turfID != "")
 #### CREATE META DATA ####
 meta.pheno <- pheno.dat %>% 
   distinct(turfID, origSite, destSite, block, treatment, year) %>% 
-  mutate(newTT = plyr::mapvalues(treatment, c("1", "2", "C", "O", "OTC"), c("1", "2", "C", "C", "OTC")))
+  mutate(newTT = plyr::mapvalues(treatment, c("1", "2", "C", "O", "OTC", "EC"), c("1", "2", "C", "C", "OTC", "C")))
+
+
+## IMPORT SPECIES TABLE ##
+taxa <- read_excel("SpeciesTraits2016_China_ZL_170925.xlsx", sheet = 1, col_names = TRUE)
+taxa <- taxa %>% 
+  gather(key = year, value = sp, sp_2016, sp_2017) %>% 
+  rename(sp_new = new_name) %>% 
+  select(year, sp, species, species_new, sp_new, family, functionalGroup, lifeSpan, floweringTime, fruitsTime, lowerLimit, higherLimit) %>% 
+  mutate(year = gsub("sp_", "", year))
+
+## JOIN TAXA DICTIONARY, REPLACE NAMES TO MATCH EACH YEAR
+pheno.dat %>% 
+  anti_join(taxa, by = c("species" = "sp")) %>% distinct(species)
 
 
 ## CORRECT SPECIES NAMES ##
 # Replace wrong names
 pheno.dat <- pheno.dat %>%
   mutate(species=replace(species,species=="Pol.leu","Pot.leu"))%>%
-  mutate(species=replace(species,species=="Cal.pal","Oxy.gla"))%>%
-  mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>%
-  mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% 
-  mutate(species=replace(species,species=="Agr.ner","Agr.sp")) %>% 
-  mutate(species=replace(species,species=="Jun.all","Jun.leu")) %>% 
-  mutate(species=replace(species,species=="Gal.spa","Gal.hof")) %>% 
+  mutate(species=replace(species,species=="Cal.pal","Oxy.gla"))%>% #?
+  mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>% #?
+  mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% #?
+  mutate(species=replace(species,species=="Agr.ner","Agr.sp")) %>% #?
+  mutate(species=replace(species,species=="Jun.all","Jun.leu")) %>% #?
+  mutate(species=replace(species,species=="Gal.spa","Gal.hof")) %>% #?
+  mutate(species=replace(species,species=="luz.mul","Luz.mul")) %>%
+  mutate(species=replace(species,species=="cya.inc","Cya.inc")) %>%
+  mutate(species=replace(species,species=="Pol.mac.","Pol.mac")) %>%
+  mutate(species=replace(species,species=="tan.tat","Tan.tat")) %>%
+  mutate(species=replace(species,species=="ver.sze","Ver.sze")) %>%
   mutate(species=replace(species,species=="Voi.sze","Vio.sze"))
 
 # Change names to match community and trait data
 pheno.dat <- pheno.dat %>% 
   #mutate(species = replace(species, species %in% c("Car.sp.black", "Car.sp.yellow"), "Car.spp")) %>% 
-  #mutate(species = replace(species, species %in% c("Kob.sp.small", "Kob.sp.sigan"), "Kob.spp")) %>% 
+  mutate(species = replace(species, species %in% c("Poa.sp.", "Poacaea.sp"), "Poa.sp")) %>% 
+  mutate(species = replace(species, species %in% c("Kob.sigan", "Kob.sp.sigan"), "Kob.sig")) %>% 
+  mutate(species = replace(species, species %in% c("Kob.sp.small"), "Kob.small")) %>% 
   mutate(species = replace(species, species %in% c("Fes.sp.big", "Fes.sp.small"), "Fes.spp")) %>% 
   mutate(species = replace(species, species %in% c("Luz.mul"), "Luzula")) %>% 
   mutate(species = replace(species, species %in% c("Gen.sp", "Gen.sp.white"), "Gen.spp")) %>%
@@ -62,10 +92,14 @@ pheno.dat <- pheno.dat %>%
   mutate(species = replace(species, species %in% c("Fra.sp.2"), "Fra.spp")) %>% 
   mutate(species = replace(species, species %in% c("Dey.pul"), "Cal.lah")) %>%
   mutate(species = replace(species, species %in% c("Dey.sca"), "Cal.sca")) %>%
+  mutate(species = replace(species, species %in% c("Tan.tat"), "Pyr.tat")) %>%
   mutate(species = replace(species, species %in% c("All.cya"), "All.pra")) %>% #???
   mutate(species = replace(species, species %in% c("Sau.cet", "Sau.gra", "Sau.hie", "Sau.pac", "Sau.sub"), "Sau.spp"))
   
-# Compare community taxa table with phenology data
+
+# Compare community and Trait taxa table with phenology data
+load(file = "taxa.RData")
+load(file = "TraitTaxa.RData")
 setdiff(pheno.dat$species, taxa$species)
 # Ok in trait: Cya.inc, Sal.sou, Ped.ver, Sau.hie, Sau.sub, Lom.car, Bro.sin, Tar.lug
 
@@ -73,12 +107,6 @@ setdiff(pheno.dat$species, taxa$species)
 ## Calculate Sums for bud, flower, seed and ripe seeds per turf
 pheno <- CalcSums(pheno.dat)
 #head(pheno)
-
-pheno %>%
-  filter(year == "2017", species == "Car.A") %>% 
-  ggplot(aes(x = doy, y = ripe)) +
-  geom_point() +
-  facet_wrap(~ turfID)
 
 
 #### CALCULATE FIRST, PEAK, END AND DURATION ####
@@ -145,7 +173,7 @@ sp.list <- NrTreat %>%
   filter(Freq > 0) %>% 
   group_by(Var3, Var1) %>% 
   summarise(n = n()) %>%
-  filter(n > 1) %>% ### !!!! SHOULD BE > 2, TO CALC MEAN FIRST DATE !!!!
+  filter(n > 2) %>% 
   # remove sp with c and treat not at same site
   filter(Var3 != "2016" | !Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
   select(-n)
@@ -164,8 +192,8 @@ phenology <- pheno.long %>%
   mutate(destSite = factor(destSite, levels =c("H", "A", "M"))) %>% 
   mutate(origSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
   # order and rename treatments
-  mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2"), c("OTC", "Control", "Local", "Warm", "Cold"))) %>% 
-  mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local"))) %>% 
+  mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2", "EC"), c("OTC", "Control", "Local", "Warm", "Cold", "ExtraControl"))) %>% 
+  mutate(treatment = factor(treatment, levels=c("Control", "OTC", "Warm", "Cold", "Local", "ExtraControl"))) %>% 
   mutate(newTT = plyr::mapvalues(newTT, c("OTC", "C", "1", "2"), c("OTC", "Control", "Warm", "Cold"))) %>% 
   mutate(newTT = factor(newTT, levels=c("Control", "OTC", "Warm", "Cold"))) %>% 
   mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("bud", "flower", "seed", "ripe"), c("Bud", "Flower", "Seed", "Ripe"))) %>% 
@@ -173,6 +201,7 @@ phenology <- pheno.long %>%
   mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy"))
 
 
+save(phenology, file = "Phenology.RData")
 
 ### NEEDS TO BE FIXED!!!
 # Left_join trait data
