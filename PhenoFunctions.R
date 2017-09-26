@@ -1,6 +1,6 @@
 # PhenoFunctions 
 #### READ IN PHENOLOGY DATA 2016 ####
-ReadInBodyPhenology <- function(datasheet, site, year){
+ReadInBodyPhenology2016 <- function(datasheet, site, year){
   # import body of data
   dat <- read.csv(datasheet, header=FALSE, sep=";", skip=3, stringsAsFactors=FALSE)
   dat <- dat[dat$V2!="",] # get rid of empty lines, where no species
@@ -15,7 +15,7 @@ ReadInBodyPhenology <- function(datasheet, site, year){
   }
   # import head of data set
   dat.h <- read.csv(datasheet, sep=";", header=FALSE, nrow=3, stringsAsFactors=FALSE)
-  #browser()
+  
   # merge data into long data table
   long.table <- lapply(seq(3,ncol(dat)-15,16),function(i){
     x <- dat[ ,c(1:2,i:(i+15))]
@@ -25,7 +25,7 @@ ReadInBodyPhenology <- function(datasheet, site, year){
     x  
   })
   dat.long <- do.call(rbind,c(long.table, stingsAsFactors=FALSE))
-  
+
   # Extract site
   dat.long$origSite <- substr(dat.long$turfID, 1,1)
   dat.long$destSite <- site
@@ -42,15 +42,102 @@ ReadInBodyPhenology <- function(datasheet, site, year){
   #sapply(dat.long[,c(4:7,9:12,14:17,19:22)],function(x)print(grep("\\D", x = x, value = TRUE))) # Check error messages
   dat.long <- dat.long[-1,]
   dat.long$year <- year
+  dat.long <- dat.long[-nrow(dat.long),] # remove strange last row
   dat.long
   return(dat.long)
 }
 
 
 
-x <- x %>% 
-  mutate(date = ifelse(year == "2016", strsplit(dat.h[1,i+1], "_")[[1]][1], dat.h[1,i+2]))
+#### READ IN 2017 data
+ReadInBodyPhenology2017 <- function(datasheet, site, year){
+  # import body of data
+  dat <- read.csv(datasheet, header=FALSE, sep=";", skip=3, stringsAsFactors=FALSE)
+  dat <- dat[dat$V2!="",] # get rid of empty lines, where no species
+  dat <- dat[,-3] # get rid of chinese names
+  dat$V2<-gsub(" ", "", dat$V2,fixed = TRUE) # get rid of space
+  
+  # loop to get turfID in all cells
+  for (i in 2:nrow(dat)){
+    if(nchar(dat$V1[i])==0){
+      dat$V1[i] <- dat$V1[i-1]
+    }
+  }
+  # import head of data set
+  dat.h <- read.csv(datasheet, sep=";", header=FALSE, nrow=3, stringsAsFactors=FALSE)
+  
+  # merge data into long data table
+  long.table <- lapply(seq(3,ncol(dat)-15,16),function(i){
+    x <- dat[ ,c(1:2,i:(i+15))]
+    names(x) <- c("turfID", "species", paste(rep(c("b", "f", "s", "r"), 4  ), rep(1:4, each=4), sep="."))
+    x$date <- dat.h[1,i+1]
+    x$doy <- yday(ymd(x$date))
+    x  
+  })
+  dat.long <- do.call(rbind,c(long.table, stingsAsFactors=FALSE))
+  
+  # Extract site
+  dat.long$origSite <- substr(dat.long$turfID, 1,1)
+  dat.long$destSite <- site
+  dat.long$block <- substr(dat.long$turfID, 2,2)
+  dat.long$treatment <- substr(dat.long$turfID, 4,nchar(dat.long$turfID))
+  
+  
+  # convert to factor and numeric
+  dat.long <- cbind(dat.long[,c(1:2,19:24)],sapply(dat.long[,c(3:18)],as.numeric))
+  #sapply(dat.long[,c(4:7,9:12,14:17,19:22)],function(x)print(grep("\\D", x = x, value = TRUE))) # Check error messages
+  dat.long <- dat.long[-1,]
+  dat.long$year <- year
+  dat.long <- dat.long[-nrow(dat.long),] # remove strange last row
+  dat.long
+  return(dat.long)
+}
 
+
+
+#### READ IN EXTRA CONTROLS 2017
+ReadInBodyPhenologyExtra <- function(datasheet, site, year){
+  # import body of data
+  dat <- read.csv(datasheet, header=FALSE, sep=";", skip=3, stringsAsFactors=FALSE)
+  dat <- dat[dat$V2!="",] # get rid of empty lines, where no species
+  dat <- dat[,-3] # get rid of chinese names
+  dat$V2<-gsub(" ", "", dat$V2,fixed = TRUE) # get rid of space
+  
+  # loop to get turfID in all cells
+  for (i in 2:nrow(dat)){
+    if(nchar(dat$V1[i])==0){
+      dat$V1[i] <- dat$V1[i-1]
+    }
+  }
+  # import head of data set
+  dat.h <- read.csv(datasheet, sep=";", header=FALSE, nrow=3, stringsAsFactors=FALSE)
+  #browser()
+  # merge data into long data table
+  long.table <- lapply(seq(3,ncol(dat)-35,36),function(i){
+    x <- dat[ ,c(1:2,i:(i+35))]
+    names(x) <- c("turfID", "species", paste(rep(c("b", "f", "s", "r"), 9), rep(1:9, each=4), sep="."))
+    x$date <- dat.h[1,i+1]
+    x$doy <- yday(ymd(x$date))
+    x  
+  })
+  dat.long <- do.call(rbind,c(long.table, stingsAsFactors=FALSE))
+  
+  # Extract site
+  dat.long$origSite <- site
+  dat.long$destSite <- site
+  dat.long$block <- sub(".*\\-", "", dat.long$turfID) # place everything before - with blank
+  dat.long$treatment <- "EC"
+  
+  
+  # convert to factor and numeric
+  dat.long <- cbind(dat.long[,c("turfID", "species", "date", "doy", "origSite", "destSite", "block", "treatment")],sapply(dat.long[,c(3:38)],as.numeric))
+  #sapply(dat.long[,c(4:7,9:12,14:17,19:22)],function(x)print(grep("\\D", x = x, value = TRUE))) # Check error messages
+  dat.long <- dat.long[-1,]
+  dat.long$year <- year
+  dat.long <- dat.long[-nrow(dat.long),] # remove strange last row
+  dat.long
+  return(dat.long)
+}
 
 
 
@@ -99,6 +186,10 @@ SpeciesMeanSE <- function(dat, phenovar){
 }    
     
 
+
+
+
+
 ### COMMUNITY DATA ###
 PlotCommunityData <- function(dat, phenovar){    
     CommunityDifference <- dat %>% 
@@ -124,12 +215,12 @@ PlotCommunityData <- function(dat, phenovar){
 
 
 ### SPECIES DATA ###
-PlotSpeciesData <- function(dat, phenovar, year){
-  dat2 <- expand.grid(Treatment=unique(dat$Treatment), species=unique(dat$species), origSite = unique(dat$origSite), pheno.stage = unique(dat$pheno.stage)) %>% data.frame %>% left_join(dat)
+PlotSpeciesData <- function(dat, phenovar, Year){
+  dat2 <- expand.grid(year = unique(dat$year), Treatment=unique(dat$Treatment), species=unique(dat$species), origSite = unique(dat$origSite), pheno.stage = unique(dat$pheno.stage)) %>% data.frame %>% left_join(dat, by = c("year", "Treatment", "species", "origSite", "pheno.stage"))
   
   # Draw plot
   dat2 %>% 
-    filter(year == year) %>% 
+    #filter(year == "2017", pheno.stage %in% c("Flower", "Seed")) %>% 
     mutate(origSite = plyr::mapvalues(origSite, c("H", "A"), c("High Alpine", "Alpine"))) %>% 
     ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
     geom_bar(position="dodge", stat="identity") +
