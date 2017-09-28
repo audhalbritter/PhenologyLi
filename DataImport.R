@@ -6,6 +6,7 @@ library("tidyverse")
 library("lubridate")
 library("ggplot2")
 library("readxl")
+library("cowplot")
 
 pn <- . %>% print(n = Inf)
 source(file = "PhenoFunctions.R")
@@ -25,17 +26,17 @@ dat6 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_M.csv", "M", "
 dat7 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_L.csv", "L", "2017")
 
 #### 2017
-dat8 <- ReadInBodyPhenologyExtra("17-09-25_ExtraControls_2017_H.csv", "H", "2017")
-dat9 <- ReadInBodyPhenologyExtra("17-09-25_ExtraControls_2017_A.csv", "A", "2017")
-dat10 <- ReadInBodyPhenologyExtra("17-09-25_ExtraControls_2017_M.csv", "M", "2017")
+dat8 <- ReadInBodyPhenologyExtra("17-09-26_ExtraControls_2017_H.csv", "H", "2017")
+dat9 <- ReadInBodyPhenologyExtra("17-09-26_ExtraControls_2017_A.csv", "A", "2017")
+dat10 <- ReadInBodyPhenologyExtra("17-09-26_ExtraControls_2017_M.csv", "M", "2017")
 
 # RBIND TABLES
 pheno.dat <- dat1 %>% 
   bind_rows(dat2, dat3, dat4, dat5, dat6, dat7, dat8, dat9, dat10) %>% 
   filter(turfID != "") # remove empty rows
 
-save(pheno.dat, file = "pheno.dat.RData")
-load(file = "pheno.dat.RData")
+#save(pheno.dat, file = "pheno.dat.RData")
+#load(file = "pheno.dat.RData")
 #head(pheno.dat)
 #str(pheno.dat)
 
@@ -47,55 +48,38 @@ meta.pheno <- pheno.dat %>%
 
 
 ## IMPORT SPECIES TABLE ##
-taxa <- read_excel("SpeciesTraits2016_China_ZL_170925.xlsx", sheet = 1, col_names = TRUE)
-taxa <- taxa %>% 
+taxa <- read_excel("SpeciesTraits2016_China_ZL_170927.xlsx", sheet = 1, col_names = TRUE)
+taxaDictionary <- taxa %>% 
   gather(key = year, value = sp, sp_2016, sp_2017) %>% 
   rename(sp_new = new_name) %>% 
-  select(year, sp, species, species_new, sp_new, family, functionalGroup, lifeSpan, floweringTime, fruitsTime, lowerLimit, higherLimit) %>% 
-  mutate(year = gsub("sp_", "", year))
-
-## JOIN TAXA DICTIONARY, REPLACE NAMES TO MATCH EACH YEAR
-pheno.dat %>% 
-  anti_join(taxa, by = c("species" = "sp")) %>% distinct(species)
+  select(year, sp, sp_new) %>% 
+  mutate(year = gsub("sp_", "", year)) 
 
 
 ## CORRECT SPECIES NAMES ##
 # Replace wrong names
 pheno.dat <- pheno.dat %>%
-  mutate(species=replace(species,species=="Pol.leu","Pot.leu"))%>%
-  mutate(species=replace(species,species=="Cal.pal","Oxy.gla"))%>% #?
-  mutate(species=replace(species,species=="Cha.tha","Jun.leu"))%>% #?
-  mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>% #?
-  mutate(species=replace(species,species=="Agr.ner","Agr.sp")) %>% #?
-  mutate(species=replace(species,species=="Jun.all","Jun.leu")) %>% #?
-  mutate(species=replace(species,species=="Gal.spa","Gal.hof")) %>% #?
+  # 2016
+  mutate(species=replace(species,species=="Sal.bra","Sal.sou")) %>%
+  mutate(species=replace(species,species %in% c("Agr.ner", "Agr.sp"),"Agr.spp")) %>%
+  mutate(species=replace(species,species %in% c("Jun.all", "Jun.sp"),"Jun.spp")) %>%
+  mutate(species=replace(species,species=="Voi.sze","Vio.sze")) %>% 
+  # 2017
   mutate(species=replace(species,species=="luz.mul","Luz.mul")) %>%
   mutate(species=replace(species,species=="cya.inc","Cya.inc")) %>%
   mutate(species=replace(species,species=="Pol.mac.","Pol.mac")) %>%
   mutate(species=replace(species,species=="tan.tat","Tan.tat")) %>%
   mutate(species=replace(species,species=="ver.sze","Ver.sze")) %>%
-  mutate(species=replace(species,species=="Voi.sze","Vio.sze"))
+  mutate(species=replace(species,species %in% c("Poa.", "Poa.sppspp"),"Poa.spp"))
 
-# Change names to match community and trait data
+
+
+## JOIN TAXA DICTIONARY, REPLACE NAMES TO MATCH EACH YEAR
 pheno.dat <- pheno.dat %>% 
-  #mutate(species = replace(species, species %in% c("Car.sp.black", "Car.sp.yellow"), "Car.spp")) %>% 
-  mutate(species = replace(species, species %in% c("Poa.sp.", "Poacaea.sp"), "Poa.sp")) %>% 
-  mutate(species = replace(species, species %in% c("Kob.sigan", "Kob.sp.sigan"), "Kob.sig")) %>% 
-  mutate(species = replace(species, species %in% c("Kob.sp.small"), "Kob.small")) %>% 
-  mutate(species = replace(species, species %in% c("Fes.sp.big", "Fes.sp.small"), "Fes.spp")) %>% 
-  mutate(species = replace(species, species %in% c("Luz.mul"), "Luzula")) %>% 
-  mutate(species = replace(species, species %in% c("Gen.sp", "Gen.sp.white"), "Gen.spp")) %>%
-  mutate(species = replace(species, species %in% c("Eup.reg"), "Eup.L")) %>% 
-  mutate(species = replace(species, species %in% c("Agr.sp"), "Agr.spp")) %>% 
-  mutate(species = replace(species, species %in% c("Sax.lin"), "Saxifrage")) %>% 
-  mutate(species = replace(species, species %in% c("Oxy.gla"), "Oxy.yun")) %>%
-  mutate(species = replace(species, species %in% c("Fra.sp.2"), "Fra.spp")) %>% 
-  mutate(species = replace(species, species %in% c("Dey.pul"), "Cal.lah")) %>%
-  mutate(species = replace(species, species %in% c("Dey.sca"), "Cal.sca")) %>%
-  mutate(species = replace(species, species %in% c("Tan.tat"), "Pyr.tat")) %>%
-  mutate(species = replace(species, species %in% c("All.cya"), "All.pra")) %>% #???
-  mutate(species = replace(species, species %in% c("Sau.cet", "Sau.gra", "Sau.hie", "Sau.pac", "Sau.sub"), "Sau.spp"))
-  
+  full_join(taxaDictionary, by = c("species" = "sp", "year")) %>% 
+  rename(sp_old = species, species = sp_new) %>% 
+  filter(!is.na(species)) # remove some empty lines
+
 
 # Compare community and Trait taxa table with phenology data
 load(file = "taxa.RData")
@@ -154,36 +138,35 @@ pheno.long <- pheno.long %>%
 
 ## List of species with more than 3 occurrences per species, site, treatment and pheno.var
 ThreeOccurences <- pheno.long %>% 
-  filter(pheno.var == "first") %>% 
-  group_by(species, year, turfID, pheno.stage) %>% 
+  #filter(pheno.var == "first") %>% 
+  group_by(species, year, turfID, pheno.stage, pheno.var) %>% 
   summarise(n = n()) %>%
   left_join(meta.pheno, by = c("turfID", "year")) %>% 
-  group_by(species, year, pheno.stage, newTT, origSite) %>% # keep O and C together
+  group_by(species, year, pheno.stage, pheno.var, newTT, origSite) %>% # keep O and C together
   summarize(n = n()) %>% 
   filter(n > 2)
 
 # Reduce nr. species 
 pheno.long <- pheno.long %>% 
-  inner_join(ThreeOccurences, by = c("species", "year", "pheno.stage", "newTT", "origSite")) %>% 
+  inner_join(ThreeOccurences, by = c("species", "year", "pheno.stage", "pheno.var", "newTT", "origSite")) %>% 
   select(-n)
 
-# Select species that occur in at least 2 treatments
-NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT, pheno.long$year))
+# Select species that occur in Control, Warm and C
+NrTreat <- as.data.frame(table(pheno.long$species, pheno.long$newTT, pheno.long$year, pheno.long$pheno.stage, pheno.long$pheno.var))
 sp.list <- NrTreat %>% 
   filter(Freq > 0) %>% 
-  group_by(Var3, Var1) %>% 
-  summarise(n = n()) %>%
-  filter(n > 2) %>% 
-  # remove sp with c and treat not at same site
-  filter(Var3 != "2016" | !Var1 %in% c("Jun.leu", "Ver.sze")) %>% 
-  select(-n)
+  mutate(Var2 = plyr::mapvalues(Var2, c("1", "2", "C", "OTC"), c("Warm", "Cold", "C", "OTC"))) %>% 
+  spread(key = Var2, value = Freq) %>% 
+  filter(!is.na(C)) %>% # need to occur at least in C
+  mutate(Warm = ifelse(is.na(Warm), 0, 1), Cold = ifelse(is.na(Cold), 0, 1), C = ifelse(is.na(C), 0, 1), OTC = ifelse(is.na(OTC), 0, 1)) %>% 
+  mutate(sum = Warm + OTC + Cold) %>% 
+  filter(sum > 0)
 
 # Reduce nr. species 
 pheno.long <- pheno.long %>% 
   # remove species with only one treatment
-  inner_join(sp.list, by = c("species" = "Var1", "year" = "Var3"))
+  inner_join(sp.list, by = c("species" = "Var1", "year" = "Var3", "pheno.stage" = "Var4", "pheno.var" = "Var5"))
   
-
 
 
 #### CLEAN VARIABLES ####
