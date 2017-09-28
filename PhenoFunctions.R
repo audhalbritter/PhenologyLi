@@ -48,7 +48,6 @@ ReadInBodyPhenology2016 <- function(datasheet, site, year){
 }
 
 
-
 #### READ IN 2017 data
 ReadInBodyPhenology2017 <- function(datasheet, site, year){
   # import body of data
@@ -180,7 +179,8 @@ SpeciesMeanSE <- function(dat, phenovar){
     unite(Transplant, Transplant_mean, Transplant_se, sep = "_") %>% 
     gather(key = Treatment, value = united, -year, -origSite, -pheno.stage, -species) %>%
     separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
-    filter(!is.na(mean))
+    filter(!is.na(mean)) %>% 
+    mutate(pheno.var = phenovar)
 
   return(SpeciesDifference)
 }    
@@ -215,20 +215,24 @@ PlotCommunityData <- function(dat, phenovar){
 
 
 ### SPECIES DATA ###
-PlotSpeciesData <- function(dat, phenovar, Year){
+PlotSpeciesData <- function(dat, Year){
   dat2 <- expand.grid(year = unique(dat$year), Treatment=unique(dat$Treatment), species=unique(dat$species), origSite = unique(dat$origSite), pheno.stage = unique(dat$pheno.stage)) %>% data.frame %>% left_join(dat, by = c("year", "Treatment", "species", "origSite", "pheno.stage"))
   
+phenovar <- dat$pheno.var
+
   # Draw plot
-  dat2 %>% 
+dat2 %>% 
     #filter(year == "2017", pheno.stage %in% c("Flower", "Seed")) %>% 
     mutate(origSite = plyr::mapvalues(origSite, c("H", "A"), c("High Alpine", "Alpine"))) %>% 
     ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
     geom_bar(position="dodge", stat="identity") +
     geom_errorbar(position = position_dodge(0.9), width = 0.2) +
+  geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
     scale_fill_manual(name = "", values = c("red", "purple")) +
-    labs(y = "Treatment - Control in days", x = "", title = phenovar) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(y = "Difference between treatment and control in days", x = "", title = phenovar) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
     facet_grid(pheno.stage ~ origSite)
+
 }
 
 
