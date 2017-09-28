@@ -5,6 +5,7 @@ PhenologyMap <- function(df){
     geom_line() + 
     geom_point() +
     facet_wrap(~ turfID) +
+    theme_minimal() +
     ggtitle(unique(df$species))
 }
 
