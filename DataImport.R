@@ -182,7 +182,12 @@ phenology <- pheno.long %>%
   mutate(newTT = factor(newTT, levels=c("Control", "OTC", "Warm", "Cold"))) %>% 
   mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("bud", "flower", "seed", "ripe"), c("Bud", "Flower", "Seed", "Ripe"))) %>% 
   mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe"))) %>% 
-  mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy"))
+  mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy")) %>% 
+  # replace block in A and M site to 11-30
+  spread(key = origSite, value = block) %>% 
+  mutate(H = as.numeric(H), A = as.numeric(A) + 10, M = as.numeric(M) + 20) %>% 
+  gather(key = origSite, value = block, H, A, M) %>% 
+  filter(!is.na(block))
 
 
 save(phenology, file = "Phenology.RData")
