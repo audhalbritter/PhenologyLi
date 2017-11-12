@@ -15,20 +15,20 @@ source(file = "PhenoFunctions.R")
 
 #### IMPORT DATA ####
 #### 2016
-dat1 <- ReadInBodyPhenology2016("Phenologydata2016_China_H.csv", "H", "2016")
-dat2 <- ReadInBodyPhenology2016("Phenologydata2016_China_A.csv", "A", "2016")
-dat3 <- ReadInBodyPhenology2016("Phenologydata2016_China_M.csv", "M", "2016")
+dat1 <- ReadInBodyPhenology2016("Data/Phenologydata2016_China_H.csv", "H", "2016")
+dat2 <- ReadInBodyPhenology2016("Data/Phenologydata2016_China_A.csv", "A", "2016")
+dat3 <- ReadInBodyPhenology2016("Data/Phenologydata2016_China_M.csv", "M", "2016")
 
 #### 2017
-dat4 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_H.csv", "H", "2017")
-dat5 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_A.csv", "A", "2017")
-dat6 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_M.csv", "M", "2017")
-dat7 <- ReadInBodyPhenology2017("17-09-25_Phenologydata2017_China_L.csv", "L", "2017")
+dat4 <- ReadInBodyPhenology2017("Data/17-09-25_Phenologydata2017_China_H.csv", "H", "2017")
+dat5 <- ReadInBodyPhenology2017("Data/17-09-25_Phenologydata2017_China_A.csv", "A", "2017")
+dat6 <- ReadInBodyPhenology2017("Data/17-09-25_Phenologydata2017_China_M.csv", "M", "2017")
+dat7 <- ReadInBodyPhenology2017("Data/17-09-25_Phenologydata2017_China_L.csv", "L", "2017")
 
 #### 2017
-dat8 <- ReadInBodyPhenologyExtra("17-09-26_ExtraControls_2017_H.csv", "H", "2017")
-dat9 <- ReadInBodyPhenologyExtra("17-09-26_ExtraControls_2017_A.csv", "A", "2017")
-dat10 <- ReadInBodyPhenologyExtra("17-09-26_ExtraControls_2017_M.csv", "M", "2017")
+dat8 <- ReadInBodyPhenologyExtra("Data/17-09-26_ExtraControls_2017_H.csv", "H", "2017")
+dat9 <- ReadInBodyPhenologyExtra("Data/17-09-26_ExtraControls_2017_A.csv", "A", "2017")
+dat10 <- ReadInBodyPhenologyExtra("Data/17-09-26_ExtraControls_2017_M.csv", "M", "2017")
 
 # RBIND TABLES
 pheno.dat <- dat1 %>% 
@@ -44,11 +44,11 @@ pheno.dat <- dat1 %>%
 #### CREATE META DATA ####
 meta.pheno <- pheno.dat %>% 
   distinct(turfID, origSite, destSite, block, treatment, year) %>% 
-  mutate(newTT = plyr::mapvalues(treatment, c("1", "2", "C", "O", "OTC", "EC"), c("1", "2", "C", "C", "OTC", "C")))
+  mutate(newTT = plyr::mapvalues(treatment, c("1", "2", "C", "O", "OTC", "EC"), c("1", "2", "C", "C", "OTC", "C"))) # variable newTT merges all Controls
 
 
 ## IMPORT SPECIES TABLE ##
-taxa <- read_excel("SpeciesTraits2016_China_ZL_170927.xlsx", sheet = 1, col_names = TRUE)
+taxa <- read_excel("Data/SpeciesTraits2016_China_ZL_170927.xlsx", sheet = 1, col_names = TRUE)
 taxaDictionary <- taxa %>% 
   gather(key = year, value = sp, sp_2016, sp_2017) %>% 
   rename(sp_new = new_name) %>% 
@@ -82,9 +82,9 @@ pheno.dat <- pheno.dat %>%
 
 
 # Compare community and Trait taxa table with phenology data
-load(file = "taxa.RData")
-load(file = "TraitTaxa.RData")
-setdiff(pheno.dat$species, taxa$species)
+#load(file = "taxa.RData")
+#load(file = "TraitTaxa.RData")
+#setdiff(pheno.dat$species, taxa$species)
 # Ok in trait: Cya.inc, Sal.sou, Ped.ver, Sau.hie, Sau.sub, Lom.car, Bro.sin, Tar.lug
 
 
@@ -160,7 +160,8 @@ sp.list <- NrTreat %>%
   filter(!is.na(C)) %>% # need to occur at least in C
   mutate(Warm = ifelse(is.na(Warm), 0, 1), Cold = ifelse(is.na(Cold), 0, 1), C = ifelse(is.na(C), 0, 1), OTC = ifelse(is.na(OTC), 0, 1)) %>% 
   mutate(sum = Warm + OTC + Cold) %>% 
-  filter(sum > 0)
+  filter(sum > 0) %>% 
+  select(-Warm, -Cold, -C, -OTC, -sum)
 
 # Reduce nr. species 
 pheno.long <- pheno.long %>% 
