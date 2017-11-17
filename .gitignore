@@ -11,6 +11,9 @@
 # RStudio files
 .Rproj.user/
 
+# subfolders
+Playing with Baysian Models/
+
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
