@@ -155,11 +155,10 @@ CalcSums <- function(dat){
 #### FUNCTIONS FOR FIGURES ####
 
 ### GET MEAN AND SE BY SPECIES ###
-SpeciesMeanSE <- function(dat, phenovar){
+SpeciesMeanSE <- function(dat){
   # Calculate mean and se by species, pheno.stage, origSite, newTT
   MeanSE <- dat %>% 
-    filter(pheno.var == phenovar) %>% 
-    group_by(year, newTT, origSite, pheno.stage, species) %>% 
+    group_by(year, newTT, origSite, pheno.stage, pheno.var, species) %>% 
     summarise(N = sum(!is.na(value)), mean = mean(value, na.rm = TRUE), se = sd(value, na.rm = TRUE)/sqrt(N))
   
   # Calculate mean for difference between Control and Treatment
@@ -172,15 +171,16 @@ SpeciesMeanSE <- function(dat, phenovar){
     separate(col = Control, into = c("Control_mean", "Control_se"), sep = "_", convert = TRUE) %>% 
     separate(col = OTC, into = c("OTC_mean", "OTC_se"), sep = "_", convert = TRUE) %>% 
     separate(col = Warm, into = c("Transplant_mean", "Transplant_se"), sep = "_", convert = TRUE) %>% 
-    mutate(OTC_mean = OTC_mean - Control_mean, Transplant_mean = Transplant_mean - Control_mean) %>% 
-    mutate(OTC_se = sqrt(Control_se^2 + OTC_se^2), Transplant_se = sqrt(Control_se^2 + Transplant_se^2)) %>% 
+    separate(col = Cold, into = c("Cold_mean", "Cold_se"), sep = "_", convert = TRUE) %>% 
+    mutate(OTC_mean = OTC_mean - Control_mean, Transplant_mean = Transplant_mean - Control_mean, Cold_mean = Cold_mean - Control_mean) %>% 
+    mutate(OTC_se = sqrt(Control_se^2 + OTC_se^2), Transplant_se = sqrt(Control_se^2 + Transplant_se^2), Cold_se = sqrt(Control_se^2 + Cold_se^2)) %>% 
     select(-Control_mean, -Control_se) %>% 
     unite(OTC, OTC_mean, OTC_se, sep = "_") %>% 
     unite(Transplant, Transplant_mean, Transplant_se, sep = "_") %>% 
-    gather(key = Treatment, value = united, -year, -origSite, -pheno.stage, -species) %>%
+    unite(Cold, Cold_mean, Cold_se, sep = "_") %>% 
+    gather(key = Treatment, value = united, -year, -origSite, -pheno.stage, -pheno.var, -species) %>%
     separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
-    filter(!is.na(mean)) %>% 
-    mutate(pheno.var = phenovar)
+    filter(!is.na(mean))
 
   return(SpeciesDifference)
 }    
@@ -215,24 +215,27 @@ PlotCommunityData <- function(dat, phenovar){
 
 
 ### SPECIES DATA ###
-PlotSpeciesData <- function(dat, Year){
-  dat2 <- expand.grid(year = unique(dat$year), Treatment=unique(dat$Treatment), species=unique(dat$species), origSite = unique(dat$origSite), pheno.stage = unique(dat$pheno.stage)) %>% data.frame %>% left_join(dat, by = c("year", "Treatment", "species", "origSite", "pheno.stage"))
-  
-phenovar <- dat$pheno.var
+PlotSpeciesData <- function(dat, phenovar, phenostage, Year){
+  dat2 <- with(dat, expand.grid(year = unique(year), Treatment=unique(Treatment), species=unique(species), origSite = unique(origSite), pheno.stage = unique(pheno.stage))) %>%
+    left_join(dat, by = c("year", "Treatment", "species", "origSite", "pheno.stage")) %>% 
+    group_by(year, species, origSite) %>% 
+    filter(sum(!is.na(mean)) > 0) %>% 
+    ungroup()
 
   # Draw plot
 dat2 %>% 
-    #filter(year == "2017", pheno.stage %in% c("Flower", "Seed")) %>% 
-    mutate(origSite = plyr::mapvalues(origSite, c("H", "A"), c("High Alpine", "Alpine"))) %>% 
+    filter(year == Year, pheno.var == phenovar, pheno.stage == phenostage) %>% 
+    mutate(origSite = plyr::mapvalues(origSite, c("H", "A", "M"), c("High Alpine", "Alpine", "Middle"))) %>% 
+    mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Transplant"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
+  mutate(Treatment = factor(Treatment, levels = c("OTC", "Transplant Warm", "Transplant Cold"))) %>% 
     ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
-    geom_bar(position="dodge", stat="identity") +
-    geom_errorbar(position = position_dodge(0.9), width = 0.2) +
-  geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
-    scale_fill_manual(name = "", values = c("red", "purple")) +
-  labs(y = "Difference between treatment and control in days", x = "", title = phenovar) +
+    geom_col(position="dodge", width = 0.7) +
+    geom_errorbar(position = position_dodge(0.7), width = 0.2) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
+    scale_fill_manual(name = "", values = c("purple", "orange", "lightblue")) +
+  labs(y = "Difference between treatment and control in days", x = "", title = dat$pheno.var[1]) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-    facet_grid(pheno.stage ~ origSite)
-
+    facet_grid( ~ origSite, scales = "free_x", space = "free_x")
 }
 
 
