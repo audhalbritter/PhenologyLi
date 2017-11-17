@@ -15,64 +15,82 @@ MeanSE <- SpeciesMeanSE(phenology, "peak")
 PlotCommunityData(MeanSE, "peak")
 
 ### Species Figures ###
-MeanSE <- SpeciesMeanSE(phenology, "peak")
-MeanSE <- MeanSE %>% 
-  filter(year == "2017", pheno.stage != "Ripe", origSite != "M") 
-#%>% filter(species %in% c("Cya.inc", "Kob.cap", "Kob.roy", "Car.atr.m", "Car.lae", "Ger.pyl", "Poa.spp", "Pol.viv", "Pot.leu"))
-PlotSpeciesData(MeanSE)
-
-
-phenology %>% 
-  filter(year == "2017", pheno.stage == "Flower", pheno.var == "peak") %>% 
-  ggplot(aes(x = newTT, y = value)) +
-  geom_violin(draw_quantiles = c(0.5)) +
-  geom_jitter(aes(colour = species)) +
-  facet_wrap(~ origSite)
-
-
-phenology %>% 
-  select(-Warm, -Cold, -OTC, -sum, -pheno.unit) %>% 
-  spread(key = pheno.var, value = value) %>% 
-  ggplot(aes(x = newTT, y = duration, colour = species)) +
-  geom_jitter() +
-  facet_wrap(~ origSite)
+MeanSE <- SpeciesMeanSE(phenology)
+PlotSpeciesData(dat = MeanSE, phenostage = "Flower", phenovar = "peak", Year = 2017)
   
 
 
 #### ANALYSIS ####
-dat <- phenology %>% 
-  filter(year == "2017", pheno.stage == "Flower", pheno.var == "peak") %>% 
-  filter(species %in% c("Cya.inc", "Kob.cap", "Kob.roy", "Car.atr.m", "Car.lae", "Ger.pyl", "Poa.spp", "Pol.viv", "Pot.leu"))
-fit1 <- glmer(value ~ newTT + species + (1|origSite/block), dat, family = "poisson")
-fit2 <- glmer(value ~ 1 + species + (1|origSite/block), dat, family = "poisson")
-fit3 <- glmer(value ~ newTT + 1 + (1|origSite/block), dat, family = "poisson")
-fit4 <- glmer(value ~ 1 + (1|origSite/block), dat, family = "poisson")
+library("MuMIn")
+#  change the default "na.omit" to prevent models from being fitted to different datasets in case of missing values.
+options(na.action = "na.fail") # can also be put in the model
+options(na.action = "na.omit") # change back
+# Alternatively put it in the modle
+
+
+# Function for model selection
+ModelSelection <- function(dat){
+  # fit model
+  fit1 <- lmer(value ~ newTT + origSite + (1|species) + (1|block), dat)
+  
+  # Model selection using dredge
+  
+  model.set <- dredge(fit1, rank = "AICc", extra = "R^2")
+  
+  res <- data.frame(model.set)
+  res$cumsum <- cumsum(res$weight)
+  
+  res <- res %>% 
+    select(-logLik, -AICc) %>% 
+    rename(R.square = R.2, delta.AIC = delta, akaikeWeight = weight) %>% 
+    mutate(R.square = round(R.square, 3), delta.AIC = round(delta.AIC, 3), akaikeWeight = round(akaikeWeight, 3), cumsum = round(cumsum, 3))
+    
+    res
+}
+
+
+
+res <- phenology %>% 
+  filter(year == "2017", pheno.stage != "Ripe") %>% 
+  group_by(year, pheno.stage, pheno.var) %>% 
+  select(value, newTT, species, origSite, block) %>% 
+  droplevels() %>% 
+  do(ModelSelection(.))
+
+res %>%
+  group_by(year, pheno.stage, pheno.var) %>%
+  filter(cumsum < 0.95)
+
+
+# test examples
+ddd <- phenology %>% 
+  filter(year == "2017", pheno.stage == "Seed", pheno.var == "duration")
+
+fit1 <- lmer(value ~ newTT + origSite + (1|species) + (1|block), ddd)
 summary(fit1)
 ModelCheck(fit1)
-overdisp_fun(fit1)
 
-modsel(list(fit1, fit2, fit3, fit4), 1000)
+model.set <- dredge(fit1, rank = "AICc", extra = "R^2")
 
+mm <- data.frame(model.set)
+mm$cumsum <- cumsum(mm$weight)
+mm95 <- mm %>% filter(cumsum < 0.95)
+averaged.model <- model.avg(model.set, cumsum(weight) <= percent.thresh)
+res <- data.frame(summary(averaged.model)$coefmat.full)
 
-fit1 <- lmer(value ~ newTT + species + (1|origSite/block), dat)
-fit2 <- lmer(value ~ newTT + (1|origSite/block), dat)
-fit3 <- lmer(value ~ species + (1|origSite/block), dat)
-fit4 <- lmer(value ~ 1 + (1|origSite/block), dat)
-modsel(list(fit1, fit2, fit3, fit4), 1000)
-summary(fit1)
 
 
 
 # backtransform the data to get doy
-newdat <- with(dat, expand.grid(
-  newTT = c("Control", "OTC", "Warm"),
-  species = c("Cya.inc", "Kob.pyg", "Car.A", "Car.bla", "Poa.sp","Pol.viv", "Pot.leu"),
+newdat <- with(myData, expand.grid(
+  newTT = c("Control", "OTC", "Warm", "Cold"),
+  origSite = c("H", "A", "M"),
   value = 0
 ))
 
 
-newdat$value <- predict(fit1, newdat, re.form = NA) # , type="response"
-mm <- model.matrix(terms(fit1), newdat)
+newdat$value <- predict(fit3, newdat, re.form = NA) # , type="response"
+mm <- model.matrix(terms(fit3), newdat)
 
 ## or newdat$distance <- mm %*% fixef(fit1)
 
