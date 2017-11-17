@@ -200,6 +200,17 @@ save(phenology, file = "Phenology.RData")
 #setdiff(NewTrait$sp, pheno.long$species)
 
 
-# Save pheno.long
-#save(phenology, file = "Phenology.RData")
+### Calculate Differences between treatments
+differences <- phenology %>% 
+  filter(year == 2017) %>% 
+  select(turfID, species, origSite, block, newTT, pheno.stage, pheno.var, value) %>% 
+  spread(key = newTT, value = value) %>% 
+  
+  # Calculate site mean value for controls
+  group_by(species, origSite, pheno.stage, pheno.var) %>%
+  mutate(ControlMeanSite = mean(Control, na.rm = TRUE), ControlSDSite = sd(Control, na.rm = TRUE)) %>%
+  select(-turfID) %>% 
+  gather(key = newTT, value = value, OTC, Warm, Cold) %>% 
+  mutate(Diff = value - ifelse(!is.na(Control), Control, ControlMeanSite)) %>% 
+  filter(!is.na(Diff))
 
