@@ -44,4 +44,8 @@ model{
     }
     blockCoeff[NBlockLvl] <- 0 
 
+    # Contrasts
+    diff1 <- newTTCoeff[2] - newTTCoeff[3]
+    diff2 <- newTTCoeff[2] - newTTCoeff[4]
+    diff3 <- newTTCoeff[3] - newTTCoeff[4]
 }
