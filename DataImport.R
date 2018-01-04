@@ -27,8 +27,16 @@ dat7 <- ReadInBodyPhenology2017("Data/17-09-25_Phenologydata2017_China_L.csv", "
 
 #### 2017
 dat8 <- ReadInBodyPhenologyExtra("Data/17-09-26_ExtraControls_2017_H.csv", "H", "2017")
+dat8 <- dat8 %>% 
+  mutate(block = plyr::mapvalues(block, c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), c("22", "23", "24", "25", "26", "27", "28", "29", "30", "31")))
 dat9 <- ReadInBodyPhenologyExtra("Data/17-09-26_ExtraControls_2017_A.csv", "A", "2017")
+dat9 <- dat9 %>% 
+  filter(block != "") %>%
+  mutate(block = plyr::mapvalues(block, c("1", "2", "3", "4", "5", "7", "8", "9", "10"), c("32", "33", "34", "35", "36", "37", "38", "39", "40")))
 dat10 <- ReadInBodyPhenologyExtra("Data/17-09-26_ExtraControls_2017_M.csv", "M", "2017")
+dat10 <- dat10 %>% 
+  filter(block != "") %>% 
+  mutate(block = plyr::mapvalues(block, c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), c("41", "42", "43", "44", "45", "46", "47", "48", "49", "50")))
 
 # RBIND TABLES
 pheno.dat <- dat1 %>% 
@@ -136,6 +144,11 @@ pheno.long <- pheno.long %>%
   filter(!is.na(value))
 
 
+# Remove Extra controls to make it simpler
+pheno.long <- pheno.long %>% 
+  filter(treatment != "EC")
+
+
 ## List of species with more than 3 occurrences per species, site, treatment and pheno.var
 ThreeOccurences <- pheno.long %>% 
   #filter(pheno.var == "first") %>% 
@@ -183,14 +196,16 @@ phenology <- pheno.long %>%
   mutate(pheno.stage = plyr::mapvalues(pheno.stage, c("bud", "flower", "seed", "ripe"), c("Bud", "Flower", "Seed", "Ripe"))) %>% 
   mutate(pheno.stage = factor(pheno.stage, levels = c("Bud", "Flower", "Seed", "Ripe"))) %>% 
   mutate(pheno.unit = ifelse(pheno.var == "duration", "days", "doy")) %>% 
+  mutate(block = as.numeric(block)) %>%
   # replace block in A and M site to 11-30
-  spread(key = origSite, value = block) %>% 
-  mutate(H = as.numeric(H), A = as.numeric(A) + 10, M = as.numeric(M) + 20) %>% 
+  spread(key = origSite, value = block) %>%
+  mutate(A = ifelse(treatment != "ExtraControl", A + 7, A), M = ifelse(treatment != "ExtraControl", M + 14, M)) %>%
   gather(key = origSite, value = block, H, A, M) %>% 
   filter(!is.na(block))
 
 
-save(phenology, file = "Phenology.RData")
+#save(phenology, file = "Phenology.RData")
+#save(phenology, file = "PhenologyWEC.RData")
 
 ### NEEDS TO BE FIXED!!!
 # Left_join trait data
@@ -200,7 +215,8 @@ save(phenology, file = "Phenology.RData")
 #setdiff(NewTrait$sp, pheno.long$species)
 
 
-### Calculate Differences between treatments
+### NOT NEEDED ### ****************************************************************
+### CALCULATE DIFFERENCES BETWEEN TREATMENT AND CONTROL ###
 differences <- phenology %>% 
   filter(year == 2017) %>% 
   select(turfID, species, origSite, block, newTT, pheno.stage, pheno.var, value) %>% 
