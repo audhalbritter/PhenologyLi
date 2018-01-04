@@ -232,11 +232,36 @@ dat2 %>%
     geom_col(position="dodge", width = 0.7) +
     geom_errorbar(position = position_dodge(0.7), width = 0.2) +
     geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
-    scale_fill_manual(name = "", values = c("purple", "orange", "lightblue")) +
-  labs(y = "Difference between treatment and control in days", x = "", title = dat$pheno.var[1]) +
+    #scale_fill_manual(name = "", values = c("purple", "orange", "lightblue")) +
+  labs(y = "Difference between treatment and control in days", x = "", title = phenovar) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-    facet_grid( ~ origSite, scales = "free_x", space = "free_x")
+    facet_grid(pheno.stage ~ Treatment * origSite, scales = "free_x", space = "free_x")
 }
+
+
+PlotSpeciesData2 <- function(dat, phenovar, Year){
+  dat %>% 
+    filter(year == Year, pheno.var == phenovar, pheno.stage != "Ripe") %>% 
+    #mutate(origSite = plyr::mapvalues(origSite, c("H", "A", "M"), c("High Alpine", "Alpine", "Middle"))) %>% 
+    mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Transplant"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
+    mutate(Treatment = factor(Treatment, levels = c("OTC", "Transplant Warm", "Transplant Cold"))) %>% 
+    mutate(origSite = plyr::mapvalues(origSite, c("A", "H", "M"), c("Alpine", "High alpine", "Mid"))) %>% 
+    mutate(origSite = factor(origSite, levels = c("High alpine", "Alpine", "Mid"))) %>% 
+    mutate(Order = paste(Treatment, origSite, species, sep = "_")) %>% 
+    ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
+    geom_col(position="dodge", width = 0.7) +
+    geom_errorbar(position = position_dodge(0.7), width = 0.2) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
+    scale_fill_manual(name = "", values = c(rep("purple", 1), rep("orange", 1), rep("lightblue", 1))) +
+    #scale_x_discrete(labels = SP) +
+    labs(y = "Difference between treatment and control in days", x = "", title = "peak") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    facet_grid(pheno.stage ~ Treatment * origSite, scales = "free_x", space = "free_x")
+}
+
+
+
+
 
 
 #### FUNCTIONS FOR ANALYSIS ####
