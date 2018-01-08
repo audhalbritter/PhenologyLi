@@ -170,13 +170,13 @@ SpeciesMeanSE <- function(dat){
     spread(key = newTT, value = united) %>% # spread Treatments
     separate(col = Control, into = c("Control_mean", "Control_se"), sep = "_", convert = TRUE) %>% 
     separate(col = OTC, into = c("OTC_mean", "OTC_se"), sep = "_", convert = TRUE) %>% 
-    separate(col = Warm, into = c("Transplant_mean", "Transplant_se"), sep = "_", convert = TRUE) %>% 
+    separate(col = Warm, into = c("Warm_mean", "Warm_se"), sep = "_", convert = TRUE) %>% 
     separate(col = Cold, into = c("Cold_mean", "Cold_se"), sep = "_", convert = TRUE) %>% 
-    mutate(OTC_mean = OTC_mean - Control_mean, Transplant_mean = Transplant_mean - Control_mean, Cold_mean = Cold_mean - Control_mean) %>% 
-    mutate(OTC_se = sqrt(Control_se^2 + OTC_se^2), Transplant_se = sqrt(Control_se^2 + Transplant_se^2), Cold_se = sqrt(Control_se^2 + Cold_se^2)) %>% 
+    mutate(OTC_mean = OTC_mean - Control_mean, Warm_mean = Warm_mean - Control_mean, Cold_mean = Cold_mean - Control_mean) %>% 
+    mutate(OTC_se = sqrt(Control_se^2 + OTC_se^2), Warm_se = sqrt(Control_se^2 + Warm_se^2), Cold_se = sqrt(Control_se^2 + Cold_se^2)) %>% 
     select(-Control_mean, -Control_se) %>% 
     unite(OTC, OTC_mean, OTC_se, sep = "_") %>% 
-    unite(Transplant, Transplant_mean, Transplant_se, sep = "_") %>% 
+    unite(Warm, Warm_mean, Warm_se, sep = "_") %>% 
     unite(Cold, Cold_mean, Cold_se, sep = "_") %>% 
     gather(key = Treatment, value = united, -year, -origSite, -pheno.stage, -pheno.var, -species) %>%
     separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
@@ -226,7 +226,7 @@ PlotSpeciesData <- function(dat, phenovar, phenostage, Year){
 dat2 %>% 
     filter(year == Year, pheno.var == phenovar, pheno.stage == phenostage) %>% 
     mutate(origSite = plyr::mapvalues(origSite, c("H", "A", "M"), c("High Alpine", "Alpine", "Middle"))) %>% 
-    mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Transplant"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
+    mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Warm"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
   mutate(Treatment = factor(Treatment, levels = c("OTC", "Transplant Warm", "Transplant Cold"))) %>% 
     ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
     geom_col(position="dodge", width = 0.7) +
@@ -243,7 +243,7 @@ PlotSpeciesData2 <- function(dat, phenovar, Year){
   dat %>% 
     filter(year == Year, pheno.var == phenovar, pheno.stage != "Ripe") %>% 
     #mutate(origSite = plyr::mapvalues(origSite, c("H", "A", "M"), c("High Alpine", "Alpine", "Middle"))) %>% 
-    mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Transplant"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
+    mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Warm"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
     mutate(Treatment = factor(Treatment, levels = c("OTC", "Transplant Warm", "Transplant Cold"))) %>% 
     mutate(origSite = plyr::mapvalues(origSite, c("A", "H", "M"), c("Alpine", "High alpine", "Mid"))) %>% 
     mutate(origSite = factor(origSite, levels = c("High alpine", "Alpine", "Mid"))) %>% 
