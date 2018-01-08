@@ -1,13 +1,10 @@
 #### COMAPARE PHENOLOGY BETWEEN OTC AND TRANSPLANT ####
-load(file = "Phenology.RData")
+load(file = "Phenology.RData", verbose = TRUE)
 source(file = "PhenoFunctions.R")
 
 library("tidyverse")
 library("lubridate")
 
-# remove "Cold" treatment
-phenology <- phenology %>% 
-  filter(newTT != "Cold")
 
 #### FIGURES ####
 ### Community Figures ###
@@ -16,8 +13,18 @@ PlotCommunityData(MeanSE, "peak")
 
 ### Species Figures ###
 MeanSE <- SpeciesMeanSE(phenology)
-PlotSpeciesData(dat = MeanSE, phenostage = "Flower", phenovar = "peak", Year = 2017)
-  
+PlotSpeciesData2(dat = MeanSE, phenovar = "peak", Year = 2016)
+
+
+head(phenology)
+MeanSE %>% 
+  left_join(AirTemp, by = c("origSite", "Treatment" = "newTT")) %>% 
+  filter(pheno.var == "peak") %>% 
+  mutate(origSite = factor(origSite, levels = c("H", "A", "M"))) %>% 
+  ggplot(aes(x = meanTair, y = mean, color = Treatment)) +
+  geom_jitter() +
+  stat_smooth(method = "lm", formula = "y ~ x") +
+  facet_grid(~ pheno.stage)
 
 
 #### ANALYSIS ####
