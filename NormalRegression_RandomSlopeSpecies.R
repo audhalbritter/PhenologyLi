@@ -46,13 +46,13 @@ model{
   }
   
   ## Treatment contrasts
-  for(sp in 1:NSPLvl){  
-    for(t1 in 1:NnewTTLvl){
-      for(t2 in 1:NnewTTLvl){
-        treatment.contrast[sp,t1,t2] <- mean.treatment[sp,t1] - mean.treatment[sp,t2]
-      }
+  #for(sp in 1:NSPLvl){  
+    #for(t1 in 1:NnewTTLvl){
+      #for(t2 in 1:NnewTTLvl){
+        #treatment.contrast[sp,t1,t2] <- mean.treatment[sp,t1] - mean.treatment[sp,t2]
+      #}
       # treatment.contrast[sp,t1] <- mean.treatment[sp,t1] - mean.treatment[sp,1] # Or could just get contrasts with control
-    } }
+    #} }
   
   #diff1 <- newTTCoeff[2] - newTTCoeff[3]
   #diff2 <- newTTCoeff[2] - newTTCoeff[4]
