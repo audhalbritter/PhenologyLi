@@ -41,7 +41,8 @@ dat10 <- dat10 %>%
 # RBIND TABLES
 pheno.dat <- dat1 %>% 
   bind_rows(dat2, dat3, dat4, dat5, dat6, dat7, dat8, dat9, dat10) %>% 
-  filter(turfID != "") # remove empty rows
+  filter(turfID != "") %>%  # remove empty rows
+  filter(!is.na(doy))
 
 #save(pheno.dat, file = "pheno.dat.RData")
 #load(file = "pheno.dat.RData")
@@ -86,7 +87,8 @@ pheno.dat <- pheno.dat %>%
 pheno.dat <- pheno.dat %>% 
   full_join(taxaDictionary, by = c("species" = "sp", "year")) %>% 
   rename(sp_old = species, species = sp_new) %>% 
-  filter(!is.na(species)) # remove some empty lines
+  filter(!is.na(species)) %>%  # remove some empty lines
+  filter(!is.na(doy))
 
 
 # Compare community and Trait taxa table with phenology data
@@ -145,8 +147,8 @@ pheno.long <- pheno.long %>%
 
 
 # Remove Extra controls to make it simpler
-pheno.long <- pheno.long %>% 
-  filter(treatment != "EC")
+#pheno.long <- pheno.long %>% 
+  #filter(treatment != "EC")
 
 
 ## List of species with more than 3 occurrences per species, site, treatment and pheno.var
@@ -184,9 +186,9 @@ pheno.long <- pheno.long %>%
 
 
 #### CLEAN VARIABLES ####
-phenology <- pheno.long %>%
+phenology <- pheno.long %>% 
   # order sites
-  mutate(destSite = factor(destSite, levels =c("H", "A", "M"))) %>% 
+  mutate(destSite = factor(destSite, levels =c("H", "A", "M", "L"))) %>% 
   mutate(origSite = factor(origSite, levels =c("H", "A", "M"))) %>% 
   # order and rename treatments
   mutate(treatment = plyr::mapvalues(treatment, c("OTC", "C", "O", "1", "2", "EC"), c("OTC", "Control", "Local", "Warm", "Cold", "ExtraControl"))) %>% 
