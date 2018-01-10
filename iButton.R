@@ -16,13 +16,15 @@ ColdAirT <- monthlyiButton %>%
   mutate(destSite = plyr::mapvalues(destSite, c("H", "A", "M"), c("A", "M", "L")))
 
 
-monthlyiButton %>% 
+iButtonTreatmentPlot <- monthlyiButton %>% 
   filter(depth == "air") %>% 
   mutate(destSite = site) %>% 
   rename(origSite = site) %>% 
   bind_rows(WarmAirT, ColdAirT) %>%
   gather(key = Temperature, value = value, Tmean) %>%
-  mutate(destSite = factor(destSite, levels = c("H", "A", "M", "L"))) %>% 
+  filter(destSite != "L") %>% 
+  mutate(destSite = plyr::mapvalues(destSite, c("H", "A", "M"), c("High - 4130m a.s.l.", "Middle - 3800m a.s.l.", "Low - 3500m a.s.l."))) %>% 
+  mutate(destSite = factor(destSite, levels = c("High - 4130m a.s.l.", "Middle - 3800m a.s.l.", "Low - 3500m a.s.l."))) %>% 
   mutate(treatment = factor(treatment, levels = c("C", "OTC", "Transplant warm", "Transplant cold"))) %>% 
   ggplot(aes(x = month, y = value, color = treatment)) +
   geom_line() +
@@ -30,6 +32,9 @@ monthlyiButton %>%
   labs(x = "", y = "Mean monthly temperature °C") +
   facet_grid(Temperature ~ destSite, scales = "free") +
   theme_minimal()
+
+ggsave(iButtonTreatmentPlot, file = "Figures/iButtonTreatmentPlot.pdf", width = 8, height = 3)
+ggsave(iButtonTreatmentPlot, file = "Figures/iButtonTreatmentPlot.jpeg", width = 8, height = 3, dpi = 300)
 
 #### monthly iButton data for each treatment ####
 Warm <- monthlyiButton %>% 
@@ -63,5 +68,21 @@ AirTemp <- monthlyiButton %>%
 
 
 #### iButton data ####
+dailyiButton <- iButton %>%
+  filter(site != "L") %>% 
+  mutate(date = dmy(format(date, "%d.%b.%Y"))) %>%
+  mutate(treatment = plyr::mapvalues(treatment, c("C", "OTC"), c("Control", "OTC"))) %>% 
+  group_by(date, depth, site, treatment) %>%
+  summarise(n = n(), mean = mean(value)) %>%
+  filter(n > 100) %>%
+  select(-n) %>% 
+  mutate(mean0 = ifelse(mean < 0, 0, mean)) %>%  # replace temperature below 5°C with 0
+  mutate(doy = yday(ymd(date))) %>% # calculate day of the year
+  group_by(site, depth, treatment) %>% 
+  mutate(cumTemp = cumsum(mean0)) %>% 
+  select(-date, -mean, -mean0)
 
-#
+cumT <- phenology %>% 
+  filter(year == "2017") %>% 
+  mutate(newTT2 = plyr::mapvalues(newTT, c("Warm", "Cold", "Control", "OTC"), c("Control", "Control", "Control", "OTC"))) %>% 
+  left_join(dailyiButton, by = c("destSite" = "site", "newTT2" = "treatment", "value" = "doy"))
