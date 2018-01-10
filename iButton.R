@@ -24,7 +24,7 @@ iButtonTreatmentPlot <- monthlyiButton %>%
   gather(key = Temperature, value = value, Tmean) %>%
   filter(destSite != "L") %>% 
   mutate(destSite = plyr::mapvalues(destSite, c("H", "A", "M"), c("High - 4130m a.s.l.", "Middle - 3800m a.s.l.", "Low - 3500m a.s.l."))) %>% 
-  mutate(destSite = factor(destSite, levels = c("High - 4130m a.s.l.", "Middle - 3800m a.s.l.", "Low - 3500m a.s.l."))) %>% 
+  mutate(destSite = factor(destSite, levels = c("Low - 3500m a.s.l.", "Middle - 3800m a.s.l.", "High - 4130m a.s.l."))) %>% 
   mutate(treatment = factor(treatment, levels = c("C", "OTC", "Transplant warm", "Transplant cold"))) %>% 
   ggplot(aes(x = month, y = value, color = treatment)) +
   geom_line() +
@@ -64,6 +64,17 @@ AirTemp <- monthlyiButton %>%
   select(-Control) %>% 
   gather(key = newTT, value = meanTair, -origSite) %>% 
   filter(!is.na(meanTair))
+
+# calculate difference between controls
+monthlyiButton %>% 
+  filter(treatment == "C") %>% 
+  group_by(depth, site) %>% 
+  summarise(mean = mean(Tmean)) %>% 
+  mutate(site = factor(site, levels = c("H", "A", "M", "L"))) %>%
+  spread(key = site, value = mean) %>% 
+  mutate(HA = H - A, AM = A - M, ML = M - L)
+  
+  
 
 
 
