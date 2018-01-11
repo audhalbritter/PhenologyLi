@@ -19,9 +19,9 @@ source("BayesianModelFunction.R")
 
 RunBayesianAnalysis(# Data input
                     dat = phenology, 
-                    Year = 2016, 
+                    Year = 2017, 
                     phenostage = "Bud", 
-                    phenovar = "duration", 
+                    phenovar = "peak", 
   
                     # Running analysis
                     niter = 100000, 
@@ -33,10 +33,7 @@ RunBayesianAnalysis(# Data input
 #------------------------------------------------------------------------------
 # OUTPUT
 
-
-load(file = "ModelOutput/mod2016Budduration.RData", verbose = TRUE)
-res2
-
+# PEAK
 load(file = "ModelOutput/mod2016Budpeak.RData", verbose = TRUE)
 Budpeak16 <- res2
 load(file = "ModelOutput/mod2016Flowerpeak.RData", verbose = TRUE)
@@ -75,3 +72,58 @@ Budpeak16 %>%
   geom_errorbar(width = 0) +
   facet_grid(year ~ pheno.stage) +
   geom_hline(yintercept = 0, color = "grey", linetype = "dashed")
+
+
+
+# DURATION
+load(file = "ModelOutput/mod2016Budduration.RData", verbose = TRUE)
+Buddur16 <- res2
+load(file = "ModelOutput/mod2016Flowerduration.RData", verbose = TRUE)
+Fldur16 <- res2
+load(file = "ModelOutput/mod2016Seedduration.RData", verbose = TRUE)
+Seeddur16 <- res2
+load(file = "ModelOutput/mod2017Budduration.RData", verbose = TRUE)
+Buddur17 <- res2
+load(file = "ModelOutput/mod2017Flowerduration.RData", verbose = TRUE)
+Fldur17 <- res2
+load(file = "ModelOutput/mod2017Seedduration.RData", verbose = TRUE)
+Seeddur17 <- res2
+
+PlotTreatmentEffectsDuration <- Buddur16 %>% 
+  rbind(Fldur16, Seeddur16, Buddur17, Fldur17, Seeddur17) %>%
+  filter(grepl("newTT", var)) %>% 
+  mutate(signif = ifelse(sign(X2.5.) == sign(X97.5.), 0, 1)) %>% 
+  mutate(Shape = paste(year, signif, sep = "_")) %>% 
+  ggplot(aes(x = variable, y = X50., ymin = X2.5., ymax = X97.5., color = variable, shape = Shape)) +
+  geom_point(size = 5) +
+  geom_errorbar(width = 0) +
+  geom_hline(yintercept = 0, color = "grey", linetype = "dashed") +
+  scale_color_manual(values = c("purple", "orange", "lightblue")) +
+  scale_shape_manual(values = c(16, 1, 17, 2)) +
+  labs(x = "", y = "Difference between treatment and control (days)") +
+  facet_grid(year ~ pheno.stage) +
+  theme(legend.position="none", text = element_text(size=18))
+
+ggsave(PlotTreatmentEffectsDuration, filename = "Figures/PlotTreatmentEffectsDuration.jpeg", height = 6, width = 15, dpi = 300)
+
+
+
+### RANDOM SLOPE MODEL
+
+load(file = "Phenology.RData")
+source("BayesianModelFunction.R")
+
+#------------------------------------------------------------------------------
+# RUN ANALYSIS
+
+RunBayesianAnalysis(# Data input
+  dat = phenology, 
+  Year = 2017, 
+  phenostage = "Bud", 
+  phenovar = "peak", 
+  
+  # Running analysis
+  niter = 10000, 
+  nburn = 5000, nthin = 5,
+  nchain = 3, 
+  mod = "NormalRegression_RandomSlopeSpecies.R")
