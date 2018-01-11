@@ -9,7 +9,7 @@ library("rjags")
 
 # load data
 load(file = "Phenology.RData")
-myData = phenology %>% filter(newTT != "Cold", year == "2017", pheno.stage == "Flower", pheno.var == "peak") %>% select(value, newTT, species) %>% as_data_frame()
+myData = phenology %>% filter(newTT != "Cold", year == "2016", pheno.stage == "Flower", pheno.var == "peak") %>% select(value, newTT, species) %>% as_data_frame()
 myData$newTT <- droplevels(myData$newTT)
 myData$species <- droplevels(factor(myData$species))
 
