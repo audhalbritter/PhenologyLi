@@ -22,7 +22,7 @@ th <- theme()
 ##############################################################################
 
 ## ----loadTrait
-trait <- read_excel("SpeciesTraits2016_China.xlsx", col_names = TRUE)
+trait <- read_excel("Data/SpeciesTraits2016_China.xlsx", col_names = TRUE)
 
 trait <- trait %>% mutate(flTime = 
                             ifelse(floweringTime %in% c("Apr-Jun", "Apr-May", "Jun", "May-Jun"), "early",
