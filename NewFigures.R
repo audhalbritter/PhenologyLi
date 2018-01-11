@@ -1,3 +1,5 @@
+load(file = "Phenology.RData")
+
 MeanSE %>% filter(treatment %in% c("Control", "Warm")) %>% 
   ggplot(aes(x = treatment, y = mean, color = origSite, group = origSite)) +
   geom_point() +
