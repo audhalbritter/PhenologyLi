@@ -44,8 +44,11 @@ model{
     }
     blockCoeff[NBlockLvl] <- 0 
 
-    # Contrasts
+    # Contrasts between treatments
     diff1 <- newTTCoeff[2] - newTTCoeff[3]
     diff2 <- newTTCoeff[2] - newTTCoeff[4]
     diff3 <- newTTCoeff[3] - newTTCoeff[4]
+    # Absolute difference between warm and cold treatment
+    diff4 <- abs(newTTCoeff[2]) - abs(newTTCoeff[4])
+    diff5 <- abs(newTTCoeff[3]) - abs(newTTCoeff[4])
 }
