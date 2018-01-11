@@ -254,13 +254,10 @@ PlotSpeciesData2 <- function(dat, phenovar, Year){
     geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
     scale_fill_manual(name = "", values = c(rep("purple", 1), rep("orange", 1), rep("lightblue", 1))) +
     #scale_x_discrete(labels = SP) +
-    labs(y = "Difference between treatment and control in days", x = "", title = "peak") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    labs(y = "Difference between treatment and control in days", x = "", title = "peak phenophase") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top") + 
     facet_grid(pheno.stage ~ Treatment * origSite, scales = "free_x", space = "free_x")
 }
-
-
-
 
 
 
