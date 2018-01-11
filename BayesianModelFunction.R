@@ -59,7 +59,7 @@ RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, n
   
   # Specify parameters for which posterior samples are saved
   #para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:2, "]", sep = ""), paste("spCoeff[", 1:20, "]", sep = ""), paste("blockCoeff[", 1:19, "]", sep = ""), "tau", "diff1", "diff2", "diff3")
-  para.names <- c("alpha", paste("newTTCoeff[", 2:(NnewTTLvl), "]", sep = ""), paste("siteCoeff[", 1:(NsiteLvl-1), "]", sep = ""), paste("spCoeff[", 1:(NSPLvl-1), "]", sep = ""), paste("blockCoeff[", 1:(NBlockLvl-1), "]", sep = ""), "tau", "diff1", "diff2", "diff3")
+  para.names <- c("alpha", paste("newTTCoeff[", 2:(NnewTTLvl), "]", sep = ""), paste("siteCoeff[", 1:(NsiteLvl-1), "]", sep = ""), paste("spCoeff[", 1:(NSPLvl-1), "]", sep = ""), paste("blockCoeff[", 1:(NBlockLvl-1), "]", sep = ""), "tau", "diff1", "diff2", "diff3", "diff4", "diff5")
   
   
   #------------------------------------------------------------------------------
@@ -94,8 +94,8 @@ RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, n
     rownames_to_column(var = "variable") %>% 
     filter(grepl("newTT|diff", variable)) %>% 
     mutate(var = variable) %>% 
-    mutate(variable = plyr::mapvalues(variable, c("newTTCoeff[2]", "newTTCoeff[3]", "newTTCoeff[4]", "diff1", "diff2", "diff3"), c("OTC", "Transplant warm", "Transplant cold", "OTC vs. Transplant warm", "OTC vs. Transplant cold", "Transplant warm vs. Transplant cold"))) %>% 
-    mutate(variable = factor(variable, levels = c("OTC", "Transplant warm", "Transplant cold", "OTC vs. Transplant warm", "OTC vs. Transplant cold", "Transplant warm vs. Transplant cold"))) %>% 
+    mutate(variable = plyr::mapvalues(variable, c("newTTCoeff[2]", "newTTCoeff[3]", "newTTCoeff[4]", "diff1", "diff2", "diff3", "diff4", "diff5"), c("OTC", "Transplant warm", "Transplant cold", "OTC vs. Transplant warm", "OTC vs. Transplant cold", "Transplant warm vs. Transplant cold", "abs(OTC) vs. abs(Transplant cold)", "abs(Transplant warm) vs. abs(Transplant cold)"))) %>% 
+    mutate(variable = factor(variable, levels = c("OTC", "Transplant warm", "Transplant cold", "OTC vs. Transplant warm", "OTC vs. Transplant cold", "Transplant warm vs. Transplant cold", "abs(OTC) vs. abs(Transplant cold)", "abs(Transplant warm) vs. abs(Transplant cold)"))) %>% 
     mutate(pheno.var = phenovar) %>% 
     mutate(pheno.stage = phenostage) %>% 
     mutate(year = Year)
