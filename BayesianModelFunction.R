@@ -17,7 +17,7 @@ RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, n
   
   myData <- dat %>% 
     # subset
-    filter(year == "2017", pheno.stage == "Bud", pheno.var == "peak") %>% 
+    filter(year == Year, pheno.stage == phenostage, pheno.var == phenovar) %>% 
     select(value, newTT, species, origSite, block) %>% 
     mutate(block = factor(block), origSite = factor(origSite), species = factor(species)) %>%
     mutate(newTT = as.numeric(newTT), origSite = as.numeric(origSite), species = as.numeric(species), block = as.numeric(block))
@@ -58,7 +58,8 @@ RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, n
   nc <- nchain			## number of chains
   
   # Specify parameters for which posterior samples are saved
-  para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:2, "]", sep = ""), paste("spCoeff[", 1:20, "]", sep = ""), paste("blockCoeff[", 1:19, "]", sep = ""), "tau", "diff1", "diff2", "diff3")
+  #para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:2, "]", sep = ""), paste("spCoeff[", 1:20, "]", sep = ""), paste("blockCoeff[", 1:19, "]", sep = ""), "tau", "diff1", "diff2", "diff3")
+  para.names <- c("alpha", paste("newTTCoeff[", 2:(NnewTTLvl), "]", sep = ""), paste("siteCoeff[", 1:(NsiteLvl-1), "]", sep = ""), paste("spCoeff[", 1:(NSPLvl-1), "]", sep = ""), paste("blockCoeff[", 1:(NBlockLvl-1), "]", sep = ""), "tau", "diff1", "diff2", "diff3")
   
   
   #------------------------------------------------------------------------------

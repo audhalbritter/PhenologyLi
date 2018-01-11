@@ -55,12 +55,14 @@ dataList <- list(y = myData$value,
 # SPECIFY PARAMETERS
 
 n.iterations <- 100000      ## draws from posterior
-n.burn <- 10000      ## draws to discard as burn-in
+n.burn <- 50000      ## draws to discard as burn-in
 thin.rate <- 5    	## thinning rate
 nc <- 3			## number of chains
 
 # Specify parameters for which posterior samples are saved
-para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:2, "]", sep = ""), paste("spCoeff[", 1:20, "]", sep = ""), paste("blockCoeff[", 1:19, "]", sep = ""), "tau", "diff1", "diff2", "diff3")
+para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:(NsiteLvl-1), "]", sep = ""), paste("spCoeff[", 1:(NSPLvl-1), "]", sep = ""), paste("blockCoeff[", 1:(NBlockLvl-1), "]", sep = ""), "tau", "diff1", "diff2", "diff3")
+
+#para.names <- c("newTTCoeff", "siteCoeff", "blockCoeff", "tau")
 
 #------------------------------------------------------------------------------
 # RUN ANALYSIS
@@ -105,14 +107,16 @@ Pbud <- res %>%
   filter(grepl("newTT", variable)) %>% 
   mutate(variable = plyr::mapvalues(variable, c("newTTCoeff[2]", "newTTCoeff[3]", "newTTCoeff[4]"), c("OTC", "Transplant warm", "Transplant cold"))) %>% 
   mutate(variable = factor(variable, levels = c("OTC", "Transplant warm", "Transplant cold"))) %>% 
-  mutate(pheno.var = "Bud") %>% 
+  mutate(pheno.var = "Bud")
+
+Pbud %>% 
   ggplot(aes(x = variable, y = X50., ymin = X2.5., ymax = X97.5.)) +
   geom_point() +
   geom_errorbar(width = 0) +
   geom_hline(yintercept = 0, color = "grey", linetype = "dashed") +
   labs(x = "", y = "Median and 95% credible interval")
 
-save(Pbud, file = "Pbud.RData")
+save(Pbud, file = "ModelOutput/Pbud.RData")
 
 # check lme4 model
 summary(lmer(y ~ newTT + origSite + (1|species) + (1|block), myData))
@@ -208,18 +212,18 @@ Pflower <- fl %>%
   filter(grepl("newTT", variable)) %>% 
   mutate(variable = plyr::mapvalues(variable, c("newTTCoeff[2]", "newTTCoeff[3]", "newTTCoeff[4]"), c("OTC", "Transplant warm", "Transplant cold"))) %>% 
   mutate(variable = factor(variable, levels = c("OTC", "Transplant warm", "Transplant cold"))) %>% 
-  mutate(pheno.var = "Flower") %>% 
-  rbind(Pbud) %>% 
+  mutate(pheno.var = "Flower")
+  
+Pflower %>% 
   ggplot(aes(x = variable, y = X50., ymin = X2.5., ymax = X97.5., color = variable)) +
   geom_point() +
   geom_errorbar(width = 0) +
   geom_hline(yintercept = 0, color = "grey", linetype = "dashed") +
   scale_color_manual(values = c("purple", "orange", "lightblue")) +
   labs(x = "", y = "Median and credible interval") +
-  facet_grid(~ pheno.var) +
   theme(legend.position="none", text = element_text(size=20))
 
-save(Pflower, file = "Pflower.RData")
+save(Pflower, file = "ModelOUtput/Pflower.RData")
 
 # check lme4 model
 summary(lmer(y ~ newTT + origSite + (1|species) + (1|block), myData))
@@ -320,7 +324,7 @@ Pseed <- seed %>%
   mutate(variable = factor(variable, levels = c("OTC", "Transplant warm", "Transplant cold"))) %>% 
   mutate(pheno.var = "Seed")
 
-save(Pseed, file = "Pseed.RData")
+save(Pseed, file = "ModelOutput/Pseed.RData")
 
 PlotTreatmentEffects <- Pseed %>% 
   rbind(Pbud, Pflower) %>% 
@@ -333,7 +337,7 @@ PlotTreatmentEffects <- Pseed %>%
   facet_grid(~ pheno.var) +
   theme(legend.position="none", text = element_text(size=18))
 
-ggsave(PlotTreatmentEffects, filename = "PlotTreatmentEffects.jpeg", height = 6, width = 15, dpi = 300)
+ggsave(PlotTreatmentEffects, filename = "Figures/PlotTreatmentEffects.jpeg", height = 6, width = 15, dpi = 300)
 
 
 # check lme4 model
