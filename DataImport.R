@@ -147,8 +147,8 @@ pheno.long <- pheno.long %>%
 
 
 # Remove Extra controls to make it simpler
-#pheno.long <- pheno.long %>% 
-  #filter(treatment != "EC")
+pheno.long <- pheno.long %>% 
+  filter(treatment != "EC")
 
 
 ## List of species with more than 3 occurrences per species, site, treatment and pheno.var
