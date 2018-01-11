@@ -25,23 +25,23 @@
     newTTCoeff[i] ~ dnorm(0, 1/10^2)
     }  
     newTTCoeff[1] <- 0    
-
+    
     for(i in 1:(NsiteLvl-1)){
     siteCoeff[i] ~ dnorm(0, 1/10^2)
     }
     siteCoeff[NsiteLvl] <- 0
-
+    
     
     # Prior for Random Effects
     for(i in 1:(NSPLvl-1)){
     spCoeff[i] ~ dnorm(0, spPrec)
     }
     spCoeff[NSPLvl] <- 0   
-
+    
     for(i in 1:(NBlockLvl-1)){
     blockCoeff[i] ~ dnorm(0, blockPrec)
     }
     blockCoeff[NBlockLvl] <- 0 
-
+    
     }
     
