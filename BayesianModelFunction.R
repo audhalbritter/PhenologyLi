@@ -1,0 +1,104 @@
+### FUNCTION TO RUN BAYESIAN ANALYSIS
+# dat = data
+# Year = year
+# phenostage = pheno.stage
+# phenovar = pheno.var
+# niter = number of iterations
+# nburn = burnin phase
+# nthin = thining
+# nchain = number of chains
+# mod = model
+
+RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, nthin, nchain, mod){
+  
+  #------------------------------------------------------------------------------
+  # LOAD DATA
+  
+  
+  myData <- dat %>% 
+    # subset
+    filter(year == "2017", pheno.stage == "Bud", pheno.var == "peak") %>% 
+    select(value, newTT, species, origSite, block) %>% 
+    mutate(block = factor(block), origSite = factor(origSite), species = factor(species)) %>%
+    mutate(newTT = as.numeric(newTT), origSite = as.numeric(origSite), species = as.numeric(species), block = as.numeric(block))
+  myData <- as.data.frame(myData)
+  
+  # Making a data list
+  y <- myData$value
+  newTT <- myData$newTT
+  origSite <- myData$origSite
+  species <- myData$species
+  block <- myData$block 
+  Ntotal <- length(y)
+  NnewTTLvl <-nlevels(factor(myData$newTT))
+  NsiteLvl <- nlevels(factor(myData$origSite))
+  NSPLvl <- nlevels(factor(myData$species))
+  NBlockLvl <- nlevels(factor(myData$block))
+  
+  dataList <- list(y = myData$value, 
+                   newTT = myData$newTT, 
+                   origSite = myData$origSite,
+                   species = myData$species, 
+                   block = myData$block, 
+                   Ntotal = length(y), 
+                   NnewTTLvl = nlevels(factor(myData$newTT)), 
+                   NsiteLvl = nlevels(factor(myData$origSite)),
+                   NSPLvl = nlevels(factor(myData$species)),
+                   NBlockLvl = nlevels(factor(myData$block))
+  )
+  
+  modname = paste("mod", Year, phenostage, phenovar, sep = "")
+  
+  #------------------------------------------------------------------------------
+  # SPECIFY PARAMETERS
+  
+  n.iterations <- niter      ## draws from posterior
+  n.burn <- nburn      ## draws to discard as burn-in
+  thin.rate <- nthin    	## thinning rate
+  nc <- nchain			## number of chains
+  
+  # Specify parameters for which posterior samples are saved
+  para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:2, "]", sep = ""), paste("spCoeff[", 1:20, "]", sep = ""), paste("blockCoeff[", 1:19, "]", sep = ""), "tau", "diff1", "diff2", "diff3")
+  
+  
+  #------------------------------------------------------------------------------
+  # RUN ANALYSIS
+  
+  ## Run model
+  mod <-jags(data = dataList, 
+                    parameters.to.save = para.names,
+                    n.thin = thin.rate, 
+                    n.chains = nc, n.burnin = n.burn, n.iter = n.iterations,
+                    model.file = mod)
+  
+  # use as.mcmmc to convert rjags object into mcmc.list
+  mod.mcmc <- as.mcmc(mod)
+  
+  #------------------------------------------------------------------------------
+  # MODEL CHECK
+  
+  png(file = paste("ModelCheck/", modname, "Gelmanplots%d.png", sep = ""), width = 1000, height = 1000)
+  gelman.plot(mod.mcmc)
+  dev.off()
+  
+  png(file = paste("ModelCheck/", modname, "Traceplots%d.png", sep = ""), width = 1000, height = 1000)
+  plot(mod.mcmc)
+  dev.off()
+  
+  #------------------------------------------------------------------------------
+  # OUTPUT
+
+  res <- data.frame(mod$BUGSoutput$summary)
+  res2 <- res %>% 
+    rownames_to_column(var = "variable") %>% 
+    filter(grepl("newTT|diff", variable)) %>% 
+    mutate(var = variable) %>% 
+    mutate(variable = plyr::mapvalues(variable, c("newTTCoeff[2]", "newTTCoeff[3]", "newTTCoeff[4]", "diff1", "diff2", "diff3"), c("OTC", "Transplant warm", "Transplant cold", "OTC vs. Transplant warm", "OTC vs. Transplant cold", "Transplant warm vs. Transplant cold"))) %>% 
+    mutate(variable = factor(variable, levels = c("OTC", "Transplant warm", "Transplant cold", "OTC vs. Transplant warm", "OTC vs. Transplant cold", "Transplant warm vs. Transplant cold"))) %>% 
+    mutate(pheno.var = phenovar) %>% 
+    mutate(pheno.stage = phenostage) %>% 
+    mutate(year = Year)
+  
+  save(res2, file = paste("ModelOutput/", modname, ".RData", sep = ""))
+  
+}
