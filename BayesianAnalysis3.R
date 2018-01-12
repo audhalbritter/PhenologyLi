@@ -25,7 +25,8 @@ RunBayesianAnalysis(# Data input
   
                     # Running analysis
                     niter = 100000, 
-                    nburn = 50000, nthin = 5,
+                    nburn = 50000, 
+                    nthin = 5,
                     nchain = 3, 
                     mod = "NormalRegression.R")
 
@@ -107,23 +108,62 @@ PlotTreatmentEffectsDuration <- Buddur16 %>%
 ggsave(PlotTreatmentEffectsDuration, filename = "Figures/PlotTreatmentEffectsDuration.jpeg", height = 6, width = 15, dpi = 300)
 
 
-
+####################################################################################
 ### RANDOM SLOPE MODEL
 
 load(file = "Phenology.RData")
-source("BayesianModelFunction.R")
+source("BaysianSlopeModelFunction.R")
 
 #------------------------------------------------------------------------------
 # RUN ANALYSIS
 
 RunBayesianAnalysis(# Data input
-  dat = phenology, 
-  Year = 2017, 
-  phenostage = "Bud", 
-  phenovar = "peak", 
+                    dat = phenology, 
+                    Year = 2017, 
+                    phenostage = "Bud", 
+                    phenovar = "peak", 
   
-  # Running analysis
-  niter = 10000, 
-  nburn = 5000, nthin = 5,
-  nchain = 3, 
-  mod = "NormalRegression_RandomSlopeSpecies.R")
+                    # Running analysis
+                    niter = 10000, 
+                    nburn = 5000, 
+                    nthin = 5,
+                    nchain = 3, 
+                    mod = "NormalRegression_RandomSlopeSpecies.R")
+
+
+load(file = "ModelOutput/modelmod2017Budpeak.RData", verbose = TRUE)
+res <- data.frame(mod$BUGSoutput$summary)
+alpha <- res %>% 
+  rownames_to_column(var = "variable") %>% 
+  filter(grepl("alpha", variable)) %>% 
+  select(mean)
+
+res %>% 
+  rownames_to_column(var = "variable") %>% 
+  filter(grepl("newTT", variable)) %>% 
+  bind_cols(meta) %>% 
+  inner_join(dd, by = c("newTT", "species")) %>% 
+  mutate(mean = 185.3687 + mean) %>% 
+  group_by(newTT) %>% 
+  summarise(mean = mean(mean))
+
+dd <- phenology %>% 
+  # subset
+  filter(year == 2017, pheno.stage == "Bud", pheno.var == "peak") %>% 
+  distinct(newTT, species)
+  
+
+# meta data
+meta <- expand.grid(species = unique(dd$species),
+                    newTT = unique(dd$newTT))
+meta <- meta %>% 
+  arrange(newTT, species)
+
+
+
+
+load(file = "ModelOutput/mod2017Budpeak.RData", verbose = TRUE)
+res2 %>% 
+  filter(grepl("newTTCoeff[d,1]", variable))
+
+
