@@ -8,17 +8,13 @@ model{
     y[i] ~ dnorm(mu[i], tau)
     
     # linear predictor
-    mu[i] <- newTTCoeff[species[i], newTT[i]] + siteCoeff[origSite[i]] + blockCoeff[block[i]]
+    mu[i] <- alpha + newTTCoeff[species[i], newTT[i]] + siteCoeff[origSite[i]] + blockCoeff[block[i]]
     
   }
   
   ### PRIORS
-  #alpha ~ dunif(0, 360) # Intercept
-  #spPrec ~ dgamma(0.001, 0.001)
+  alpha ~ dunif(0, 360) # Intercept
   blockPrec ~ dgamma(0.001, 0.001)
-  
-  #sigma ~ dunif(0, 100)
-  #tau <- 1 / (sigma * sigma)
   tau ~ dgamma(0.001, 0.001)
   
   # Prior for Fixed Effects
@@ -29,7 +25,7 @@ model{
       mean.treatment[sp,t] ~ dnorm(0, 0.001) 
       
     }}
-  
+
   for(i in 1:NsiteLvl){
     siteCoeff[i] ~ dnorm(0, 1/10^2)
   }
@@ -44,7 +40,7 @@ model{
   for(sp in 1:(NSPLvl)){  
     tau.slope[sp] ~ dgamma(0.001, 0.001)  
   }
-  
+
   ## Treatment contrasts
   #for(sp in 1:NSPLvl){  
     #for(t1 in 1:NnewTTLvl){
