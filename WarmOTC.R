@@ -13,9 +13,10 @@ PlotCommunityData(MeanSE, "peak")
 
 ### Species Figures ###
 MeanSE <- SpeciesMeanSE(phenology)
-PlotSpeciesData2(dat = MeanSE, phenovar = "peak", Year = 2016)
+SpeciesPlot <- PlotSpeciesData2(dat = MeanSE, phenovar = "peak", Year = 2017)
+ggsave(SpeciesPlot, file = "Figures/SpeciesPlot.jpeg", width = 10, height = 5, dpi = 300)
 
-
+# Test Sensitivity
 head(phenology)
 MeanSE %>% 
   left_join(AirTemp, by = c("origSite", "Treatment" = "newTT")) %>% 
@@ -25,6 +26,54 @@ MeanSE %>%
   geom_jitter() +
   stat_smooth(method = "lm", formula = "y ~ x") +
   facet_grid(~ pheno.stage)
+
+
+
+# Cumulative Temperature
+MeanSE <- cumT %>% 
+  filter(pheno.var == "peak", pheno.stage == "Bud", is.na(cumTemp)) %>% 
+  group_by(year, newTT, origSite, pheno.stage, pheno.var, species, depth) %>% 
+  summarise(N = sum(!is.na(cumTemp)), mean = mean(cumTemp, na.rm = TRUE), se = sd(cumTemp, na.rm = TRUE)/sqrt(N))
+
+# Calculate mean for difference between Control and Treatment
+#SPOnlyInOneTreatment
+SpeciesDifference <- MeanSE %>% 
+  ungroup() %>% 
+  select(-N) %>%  # remove site, because it causes problems
+  unite(united, mean, se, sep = "_") %>% # unite mean and se
+  spread(key = newTT, value = united) %>% # spread Treatments
+  separate(col = Control, into = c("Control_mean", "Control_se"), sep = "_", convert = TRUE) %>% 
+  separate(col = OTC, into = c("OTC_mean", "OTC_se"), sep = "_", convert = TRUE) %>% 
+  separate(col = Warm, into = c("Warm_mean", "Warm_se"), sep = "_", convert = TRUE) %>% 
+  separate(col = Cold, into = c("Cold_mean", "Cold_se"), sep = "_", convert = TRUE) %>% 
+  mutate(OTC_mean = OTC_mean - Control_mean, Warm_mean = Warm_mean - Control_mean, Cold_mean = Cold_mean - Control_mean) %>% 
+  mutate(OTC_se = sqrt(Control_se^2 + OTC_se^2), Warm_se = sqrt(Control_se^2 + Warm_se^2), Cold_se = sqrt(Control_se^2 + Cold_se^2)) %>% 
+  select(-Control_mean, -Control_se) %>% 
+  unite(OTC, OTC_mean, OTC_se, sep = "_") %>% 
+  unite(Warm, Warm_mean, Warm_se, sep = "_") %>% 
+  unite(Cold, Cold_mean, Cold_se, sep = "_") %>% 
+  gather(key = Treatment, value = united, -year, -origSite, -pheno.stage, -pheno.var, -species, -depth) %>%
+  separate(col = united, into = c("mean", "se"), sep = "_", convert = TRUE) %>% 
+  filter(!is.na(mean))
+
+
+SpeciesDifference %>% 
+  filter(year == 2017, pheno.var == "peak", pheno.stage != "Ripe", depth == "ground") %>% 
+  mutate(Treatment = plyr::mapvalues(Treatment, c("Cold", "OTC", "Warm"), c("Transplant Cold", "OTC", "Transplant Warm"))) %>% 
+  mutate(Treatment = factor(Treatment, levels = c("OTC", "Transplant Warm", "Transplant Cold"))) %>% 
+  mutate(origSite = plyr::mapvalues(origSite, c("A", "H", "M"), c("Alpine", "High alpine", "Mid"))) %>% 
+  mutate(origSite = factor(origSite, levels = c("High alpine", "Alpine", "Mid"))) %>% 
+  mutate(Order = paste(Treatment, origSite, species, sep = "_")) %>% 
+  ggplot(aes(y = mean, x = species, fill = Treatment, ymin = mean - se, ymax = mean + se)) +
+  geom_col(position="dodge", width = 0.7) +
+  geom_errorbar(position = position_dodge(0.7), width = 0.2) +
+  geom_hline(yintercept = 0, colour = "grey", linetype = 2) +
+  scale_fill_manual(name = "", values = c(rep("purple", 1), rep("orange", 1), rep("lightblue", 1))) +
+  #scale_x_discrete(labels = SP) +
+  labs(y = "Difference between treatment and control in days", x = "", title = "peak") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  facet_grid(pheno.stage ~ Treatment * origSite, scales = "free_x", space = "free_x")
+
 
 
 #### ANALYSIS ####
