@@ -65,17 +65,6 @@ AirTemp <- monthlyiButton %>%
   gather(key = newTT, value = meanTair, -origSite) %>% 
   filter(!is.na(meanTair))
 
-# calculate difference between controls
-monthlyiButton %>% 
-  filter(treatment == "C") %>% 
-  group_by(depth, site) %>% 
-  summarise(mean = mean(Tmean)) %>% 
-  mutate(site = factor(site, levels = c("H", "A", "M", "L"))) %>%
-  spread(key = site, value = mean) %>% 
-  mutate(HA = H - A, AM = A - M, ML = M - L)
-  
-  
-
 
 
 #### iButton data ####
