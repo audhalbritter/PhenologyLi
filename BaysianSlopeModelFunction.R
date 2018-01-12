@@ -62,7 +62,7 @@ RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, n
   #para.names <- c("alpha", paste("newTTCoeff[", 2:(NnewTTLvl), "]", sep = ""), paste("siteCoeff[", 1:(NsiteLvl-1), "]", sep = ""), paste("spCoeff[", 1:(NSPLvl-1), "]", sep = ""), paste("blockCoeff[", 1:(NBlockLvl-1), "]", sep = ""), "tau", "diff1", "diff2", "diff3", "diff4", "diff5")
   
   # random slope model
-  para.names <- c("newTTCoeff", "siteCoeff")
+  para.names <- c("alpha", "newTTCoeff", "siteCoeff")
   
   
   #------------------------------------------------------------------------------
