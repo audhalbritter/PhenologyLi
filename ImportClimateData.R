@@ -61,8 +61,24 @@ temperature <- distinct_weather2 %>%
   separate(logger, c("logger", "location"), sep = "\\.")
   
 
+
+
+#####
+library("data.table")
+load(file = "~/Dropbox/Bergen/Transplant - China/climate/climate.RData")
+climate <- setDT(climate)
+climate <- setDT(climate)
+
 ### Calculate Daily Temperature
-dailyTemperature <- CaclulateDailyValues(temperature)
+dailyTemperature <- climate %>% 
+  select(site, dateTime, Tair, Tsoil0, Tsoil5, Tsoil20) %>% 
+  gather(key = variable, value = value, - site, -dateTime) %>% 
+  mutate(date = dmy(format(dateTime, "%d.%b.%Y"))) %>%
+  group_by(site, variable, date) %>%
+  summarise(n = n(), mean = mean(value), min = min(value), max = max(value))
+
+  filter(n > 6) %>%
+  select(-n)
 
 # Get monthly mean for 2013
 dailyTemperature %>% 
