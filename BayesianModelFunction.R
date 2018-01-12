@@ -58,7 +58,6 @@ RunBayesianAnalysis <- function(dat, Year, phenostage, phenovar, niter, nburn, n
   nc <- nchain			## number of chains
   
   # Specify parameters for which posterior samples are saved
-  #para.names <- c("alpha", paste("newTTCoeff[", 2:4, "]", sep = ""), paste("siteCoeff[", 1:2, "]", sep = ""), paste("spCoeff[", 1:20, "]", sep = ""), paste("blockCoeff[", 1:19, "]", sep = ""), "tau", "diff1", "diff2", "diff3")
   para.names <- c("alpha", paste("newTTCoeff[", 2:(NnewTTLvl), "]", sep = ""), paste("siteCoeff[", 1:(NsiteLvl-1), "]", sep = ""), paste("spCoeff[", 1:(NSPLvl-1), "]", sep = ""), paste("blockCoeff[", 1:(NBlockLvl-1), "]", sep = ""), "tau", "diff1", "diff2", "diff3", "diff4", "diff5")
   
   
