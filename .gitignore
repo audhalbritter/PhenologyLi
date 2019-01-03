@@ -39,6 +39,7 @@ vignettes/*.pdf
 *.sqlite
 *.dat
 *.RData.Tmp1
+!Phenology.RData
 
 #rasters & shapefiles
 *.bil
@@ -52,4 +53,5 @@ vignettes/*.pdf
 *.pdf
 *.jpeg
 *.jpg
-.my.cnf
+*.my.cnf
+*.DS_Store
